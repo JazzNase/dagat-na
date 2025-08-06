@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import { Button } from './DemoComponents'
 

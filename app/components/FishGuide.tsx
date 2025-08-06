@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -278,7 +277,7 @@ export function FishGuide() {
                 <h3 className="font-bold">Random Adoption</h3>
                 <p className="text-sm text-gray-600">
                   Every fish adoption is completely random! You might get a common Bronze Tilapia 
-                  or a super rare Diamond Bangus - it's all about luck! 🍀
+                  or a super rare Diamond Bangus - it&apos;s all about luck! 🍀
                 </p>
               </div>
             </CardContent>
