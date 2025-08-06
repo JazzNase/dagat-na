@@ -21,8 +21,8 @@ import {
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Button } from "./components/DemoComponents";
 import { Icon } from "./components/DemoComponents";
-import { Home } from "./components/DemoComponents";
-import { Features } from "./components/DemoComponents";
+import { DagatNaHome } from "./components/DagatNaHome";
+import { FishGuide } from "./components/FishGuide";
 
 export default function App() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
@@ -70,12 +70,57 @@ export default function App() {
     return null;
   }, [context, frameAdded, handleAddFrame]);
 
+  // Get page title based on active tab
+  const getPageTitle = () => {
+    switch (activeTab) {
+      case "home":
+        return "🐟 Dagat na"
+      case "adopt":
+        return "🎣 Adopt Fish"
+      case "tank":
+        return "🐠 Fish Tank"
+      case "learn":
+        return "📚 Fish Guide"
+      default:
+        return "🐟 Dagat na"
+    }
+  }
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "home":
+        return <DagatNaHome setActiveTab={setActiveTab} />
+      case "adopt":
+        return <div className="text-center p-8">🎣 Fish Adoption Coming Soon!</div>
+      case "tank":
+        return <div className="text-center p-8">🐠 Fish Tank View Coming Soon!</div>
+      case "learn":
+        return <FishGuide />
+      default:
+        return <DagatNaHome setActiveTab={setActiveTab} />
+    }
+  }
+
   return (
     <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
       <div className="w-full max-w-md mx-auto px-4 py-3">
         <header className="flex justify-between items-center mb-3 h-11">
-          <div>
-            <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2">
+            {/* Back Button */}
+            {activeTab !== "home" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTab("home")}
+                className="p-2"
+                icon={<Icon name="arrow-right" size="sm" className="rotate-180" />}
+              >
+                Back
+              </Button>
+            )}
+            
+            {/* Wallet or Page Title */}
+            {activeTab === "home" ? (
               <Wallet className="z-10">
                 <ConnectWallet>
                   <Name className="text-inherit" />
@@ -90,14 +135,16 @@ export default function App() {
                   <WalletDropdownDisconnect />
                 </WalletDropdown>
               </Wallet>
-            </div>
+            ) : (
+              <h2 className="font-bold text-lg">{getPageTitle()}</h2>
+            )}
           </div>
+          
           <div>{saveFrameButton}</div>
         </header>
 
         <main className="flex-1">
-          {activeTab === "home" && <Home setActiveTab={setActiveTab} />}
-          {activeTab === "features" && <Features setActiveTab={setActiveTab} />}
+          {renderContent()}
         </main>
 
         <footer className="mt-2 pt-4 flex justify-center">
@@ -107,7 +154,7 @@ export default function App() {
             className="text-[var(--ock-text-foreground-muted)] text-xs"
             onClick={() => openUrl("https://base.org/builders/minikit")}
           >
-            Built on Base with MiniKit
+            🐟 Dagat na • Built on Base with MiniKit
           </Button>
         </footer>
       </div>
