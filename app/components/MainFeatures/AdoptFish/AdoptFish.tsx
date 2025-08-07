@@ -13,17 +13,22 @@ import { FishRarityUtils } from "./FishRarityUtils";
 export function AdoptFish() {
   const { isConnected, address } = useAccount();
   const [generatedFish, setGeneratedFish] = useState<GeneratedFish | null>(null);
+  const [txHash, setTxHash] = useState<string>("");
   
   const { data: balance } = useBalance({ address });
   
   const { 
     writeContract: adoptFish, 
     isPending: isAdopting,
-    data: txHash,
-    error: adoptError
+    data: contractTxHash,
+    error: adoptError,
+    reset: resetContract
   } = useWriteContract({
     mutation: {
-      onSuccess: (hash) => console.log("✅ Transaction sent:", hash),
+      onSuccess: (hash) => {
+        console.log("✅ Transaction sent:", hash);
+        setTxHash(hash);
+      },
       onError: (error) => console.error("❌ Transaction failed:", error)
     }
   });
@@ -32,7 +37,7 @@ export function AdoptFish() {
     isLoading: isConfirming, 
     isSuccess: isConfirmed,
     error: confirmError 
-  } = useWaitForTransactionReceipt({ hash: txHash });
+  } = useWaitForTransactionReceipt({ hash: contractTxHash });
 
   const handleAdoptFish = async () => {
     if (!generatedFish || !isConnected) return;
@@ -66,7 +71,12 @@ export function AdoptFish() {
     return Math.floor(balanceInEth / diamondFee);
   };
 
-  const resetState = () => setGeneratedFish(null);
+  // 🎯 FIXED: Complete reset function
+  const resetState = () => {
+    setGeneratedFish(null);
+    setTxHash("");
+    resetContract(); // Reset the wagmi contract state
+  };
 
   // Status screens
   if (isConfirmed && txHash) {
