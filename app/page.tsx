@@ -23,6 +23,8 @@ import { Button } from "./components/DemoComponents";
 import { Icon } from "./components/DemoComponents";
 import { DagatNaHome } from "./components/DagatNaHome";
 import { FishGuide } from "./components/FishGuide";
+import { AdoptFish } from "./components/AdoptFish";
+import { FishTank } from "./components/FishTank";
 
 export default function App() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
@@ -91,9 +93,9 @@ export default function App() {
       case "home":
         return <DagatNaHome setActiveTab={setActiveTab} />
       case "adopt":
-        return <div className="text-center p-8">🎣 Fish Adoption Coming Soon!</div>
+        return <AdoptFish />
       case "tank":
-        return <div className="text-center p-8">🐠 Fish Tank View Coming Soon!</div>
+        return <FishTank />
       case "learn":
         return <FishGuide />
       default:
@@ -104,21 +106,21 @@ export default function App() {
   return (
     <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
       <div className="w-full max-w-md mx-auto px-4 py-3">
-        {/* Development Notice Banner */}
-        <div className="mb-3 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-3 text-center">
+        {/* Updated Development Notice Banner */}
+        <div className="mb-3 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-3 text-center">
           <div className="flex items-center justify-center space-x-2 mb-1">
-            <span className="text-blue-600">🚧</span>
-            <span className="text-sm font-semibold text-blue-800">Phase 1: Development</span>
-            <span className="text-blue-600">🚧</span>
+            <span className="text-green-600">🔗</span>
+            <span className="text-sm font-semibold text-green-800">Phase 2: On-Chain Live!</span>
+            <span className="text-green-600">🔗</span>
           </div>
-          <p className="text-xs text-blue-700 leading-relaxed">
-            Currently using <strong>Supabase</strong> for rapid prototyping. 
-            Full <strong>Base blockchain integration</strong> coming in Phase 2!
+          <p className="text-xs text-green-700 leading-relaxed">
+            Full blockchain integration with <strong>Base Sepolia</strong>! 
+            Fish adoption & tank management ready.
           </p>
-          <div className="mt-2 flex justify-center space-x-4 text-xs text-blue-600">
-            <span>✅ Game Mechanics</span>
-            <span>🔄 Fish Care System</span>
-            <span>🔜 NFT Minting</span>
+          <div className="mt-2 flex justify-center space-x-4 text-xs text-green-600">
+            <span>✅ Smart Contract</span>
+            <span>✅ NFT Minting</span>
+            <span>✅ Fish Tank</span>
           </div>
         </div>
 
