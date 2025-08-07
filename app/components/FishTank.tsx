@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useAccount } from "wagmi";
 import { Button } from "./DemoComponents";
 import { useFishTank, type Fish } from "../../hooks/useFishTank";
 import { CONTRACT_ADDRESS } from "../../contracts/abi";
+import { OceanCleanup } from "./OceanCleanup";
 
 // Fish Tank UI Component
 function FishCard({ fish, onSelect, isSelected }: { 
@@ -190,6 +192,9 @@ export function FishTank() {
     totalCountError
   } = useFishTank();
 
+  // Add mini-game state
+  const [showMiniGame, setShowMiniGame] = useState(false);
+
   if (!isConnected) {
     return (
       <div className="text-center p-8">
@@ -325,21 +330,40 @@ export function FishTank() {
 
   return (
     <div className="space-y-6 p-4">
-      {/* Header with Refresh Button */}
+      {/* Header with Mini-Game and Refresh Buttons */}
       <div className="flex justify-between items-center">
         <div className="text-center flex-1">
           <h2 className="text-2xl font-bold mb-2">🐠 Your Fish Tank</h2>
           <p className="text-gray-600">You have {fish.length} fish in your collection</p>
         </div>
-        <Button onClick={refreshFish} variant="outline" size="sm">
-          🔄
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={() => setShowMiniGame(true)} 
+            variant="primary" 
+            size="sm"
+          >
+            🎮 Play
+          </Button>
+          <Button onClick={refreshFish} variant="outline" size="sm">
+            🔄
+          </Button>
+        </div>
       </div>
 
       {/* Success Notice */}
       <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
         <div className="text-sm text-green-700">
           🎉 Great! Your fish are loaded from the blockchain!
+        </div>
+      </div>
+
+      {/* Mini-Game Notice */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+        <div className="text-sm text-blue-700 mb-1">
+          🌊 <strong>New!</strong> Play Ocean Cleanup to earn fish food!
+        </div>
+        <div className="text-xs text-blue-600">
+          Help clean Philippine waters and get rewards on the blockchain 🏆
         </div>
       </div>
 
@@ -373,8 +397,14 @@ export function FishTank() {
           <li>• Every 100 XP = 1 level up!</li>
           <li>• Unfed fish for 24+ hours will start starving</li>
           <li>• Higher level fish are more valuable</li>
+          <li>• <strong>NEW:</strong> Play mini-games to earn fish food!</li>
         </ul>
       </div>
+
+      {/* Mini-Game Modal */}
+      {showMiniGame && (
+        <OceanCleanup onClose={() => setShowMiniGame(false)} />
+      )}
     </div>
   );
 }
