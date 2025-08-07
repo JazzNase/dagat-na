@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../contracts/abi";
 
@@ -15,31 +15,56 @@ export type Fish = {
   isAlive: boolean;
 };
 
+// Type for the raw contract response (tuple format)
+type ContractFishData = readonly [
+  bigint,    // id
+  string,    // species
+  string,    // filipinoName
+  string,    // rarity
+  bigint,    // level
+  bigint,    // experience
+  bigint,    // lastFed
+  boolean    // isAlive
+];
+
+// Type for contract response (object format)
+type ContractFishObject = {
+  id: bigint;
+  species: string;
+  filipinoName: string;
+  rarity: string;
+  level: bigint;
+  experience: bigint;
+  lastFed: bigint;
+  isAlive: boolean;
+};
+
+// Union type for contract response
+type ContractFishItem = ContractFishData | ContractFishObject;
+
 export function useFishTank() {
   const { address, isConnected } = useAccount();
   const [selectedFish, setSelectedFish] = useState<Fish | null>(null);
 
-  // Try multiple function names for getting total count
-  const { data: totalSupply } = useReadContract({
-    abi: DAGAT_NA_ABI,
-    address: CONTRACT_ADDRESS,
-    functionName: 'totalSupply',
-    query: { enabled: !!isConnected },
-  });
-
-  const { data: fishCount } = useReadContract({
-    abi: DAGAT_NA_ABI,
-    address: CONTRACT_ADDRESS,
-    functionName: 'fishCount',
-    query: { enabled: !!isConnected },
-  });
-
-  // Try to get fish IDs first
+  // Get total fish count using nextFishId
   const { 
-    data: fishIds, 
-    isLoading: isLoadingIds,
-    error: idsError,
-    refetch: refetchFishIds
+    data: nextFishId, 
+    error: totalCountError 
+  } = useReadContract({
+    abi: DAGAT_NA_ABI,
+    address: CONTRACT_ADDRESS,
+    functionName: 'nextFishId',
+    query: {
+      enabled: !!isConnected,
+    }
+  });
+
+  // Read fish data from contract
+  const { 
+    data: fishData, 
+    isLoading, 
+    refetch,
+    error 
   } = useReadContract({
     abi: DAGAT_NA_ABI,
     address: CONTRACT_ADDRESS,
@@ -47,51 +72,9 @@ export function useFishTank() {
     args: address ? [address] : undefined,
     query: {
       enabled: !!address && isConnected,
-      refetchInterval: 5000,
+      refetchInterval: 5000, // Refetch every 5 seconds
     }
   });
-
-  // Get individual fish data for each ID
-  const [fish, setFish] = useState<Fish[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  // Fetch individual fish when we have IDs
-  useEffect(() => {
-    const fetchFishDetails = async () => {
-      if (!fishIds || !Array.isArray(fishIds) || fishIds.length === 0) {
-        setFish([]);
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        // For now, create mock fish data since getFish might not work
-        const mockFish: Fish[] = (fishIds as bigint[]).map((id, index) => ({
-          id,
-          species: ["Tilapia", "Bangus", "Lapu-lapu", "Maya-maya"][index % 4],
-          filipinoName: ["Tilapya", "Milkfish", "Grouper", "Snapper"][index % 4],
-          rarity: ["Bronze", "Silver", "Gold", "Diamond"][index % 4],
-          level: BigInt(1),
-          experience: BigInt(0),
-          lastFed: BigInt(Math.floor(Date.now() / 1000)),
-          isAlive: true,
-        }));
-
-        setFish(mockFish);
-      } catch (err) {
-        console.error("Error fetching fish details:", err);
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchFishDetails();
-  }, [fishIds]);
 
   // Feed fish functionality
   const { 
@@ -102,6 +85,10 @@ export function useFishTank() {
     mutation: {
       onSuccess: () => {
         console.log("✅ Feed transaction sent");
+        // Refetch fish data after successful transaction
+        setTimeout(() => {
+          refetch();
+        }, 2000);
       },
       onError: (error) => {
         console.error("❌ Feed transaction failed:", error);
@@ -109,17 +96,18 @@ export function useFishTank() {
     }
   });
 
+  // Wait for feed transaction confirmation
   const { isSuccess: isFeedConfirmed } = useWaitForTransactionReceipt({
     hash: feedTxHash,
   });
 
-  // Refetch fish data when feed transaction is confirmed
+  // Refetch data when feed transaction is confirmed
   useEffect(() => {
     if (isFeedConfirmed) {
       console.log("🔄 Feed confirmed, refreshing fish data...");
-      refetchFishIds();
+      refetch();
     }
-  }, [isFeedConfirmed, refetchFishIds]);
+  }, [isFeedConfirmed, refetch]);
 
   const handleFeedFish = async (fishId: bigint) => {
     if (!isConnected) return;
@@ -138,12 +126,56 @@ export function useFishTank() {
     }
   };
 
+  // Manual refresh function
   const refreshFish = () => {
     console.log("🔄 Manually refreshing fish data...");
-    refetchFishIds();
+    refetch();
   };
 
-  const totalFishCount = totalSupply ? Number(totalSupply) : (fishCount ? Number(fishCount) : 0);
+  // Helper function to check if item is tuple format
+  const isTupleFormat = (item: ContractFishItem): item is ContractFishData => {
+    return Array.isArray(item);
+  };
+
+  // Convert contract data to Fish array with useMemo to prevent unnecessary re-renders
+  const fish: Fish[] = useMemo(() => {
+    if (!fishData || !Array.isArray(fishData)) {
+      return [];
+    }
+    
+    // Convert the contract data to our Fish type with proper typing
+    return (fishData as ContractFishItem[]).map((fishItem) => {
+      if (isTupleFormat(fishItem)) {
+        // Tuple format: [id, species, filipinoName, rarity, level, experience, lastFed, isAlive]
+        const [id, species, filipinoName, rarity, level, experience, lastFed, isAlive] = fishItem;
+        return {
+          id: BigInt(id || 0),
+          species: species || "Unknown",
+          filipinoName: filipinoName || "Unknown",
+          rarity: rarity || "Bronze",
+          level: BigInt(level || 1),
+          experience: BigInt(experience || 0),
+          lastFed: BigInt(lastFed || Math.floor(Date.now() / 1000)),
+          isAlive: isAlive !== undefined ? isAlive : true,
+        };
+      } else {
+        // Object format: {id, species, filipinoName, ...}
+        return {
+          id: BigInt(fishItem.id || 0),
+          species: fishItem.species || "Unknown",
+          filipinoName: fishItem.filipinoName || "Unknown",
+          rarity: fishItem.rarity || "Bronze",
+          level: BigInt(fishItem.level || 1),
+          experience: BigInt(fishItem.experience || 0),
+          lastFed: BigInt(fishItem.lastFed || Math.floor(Date.now() / 1000)),
+          isAlive: fishItem.isAlive !== undefined ? fishItem.isAlive : true,
+        };
+      }
+    });
+  }, [fishData]);
+
+  // Calculate total fish count from nextFishId
+  const totalFishCount = nextFishId ? Number(nextFishId) - 1 : 0;
 
   // Enhanced debug logging
   useEffect(() => {
@@ -151,26 +183,27 @@ export function useFishTank() {
       isConnected,
       address,
       contractAddress: CONTRACT_ADDRESS,
-      fishIds: fishIds ? (fishIds as bigint[]).length : 0,
-      fishIdsData: fishIds,
       fishCount: fish.length,
       isLoading,
-      idsError: idsError?.message,
-      totalSupply: totalSupply ? Number(totalSupply) : 'N/A',
-      fishCountVar: fishCount ? Number(fishCount) : 'N/A',
+      error: error?.message,
+      totalFishCount,
+      totalCountError: totalCountError?.message,
+      nextFishId: nextFishId ? Number(nextFishId) : 'N/A',
+      rawFishData: fishData,
+      processedFish: fish,
     });
-  }, [fish.length, isLoading, idsError?.message, isConnected, address, fishIds, totalSupply, fishCount]);
+  }, [fish, isLoading, error?.message, isConnected, address, totalFishCount, totalCountError?.message, fishData, nextFishId]);
 
   return {
     fish,
     selectedFish,
     setSelectedFish,
-    isLoading: isLoading || isLoadingIds,
+    isLoading,
     handleFeedFish,
     isFeedingPending,
     refreshFish,
-    error: error || idsError,
+    error,
     totalFishCount,
-    totalCountError: idsError,
+    totalCountError,
   };
 }

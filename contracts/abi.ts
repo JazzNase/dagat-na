@@ -8,7 +8,7 @@ export const DAGAT_NA_ABI = [
       },
       {
         "internalType": "string",
-        "name": "filipinoName", 
+        "name": "filipinoName",
         "type": "string"
       },
       {
@@ -22,35 +22,15 @@ export const DAGAT_NA_ABI = [
     "stateMutability": "payable",
     "type": "function"
   },
-  // Try different function names that might exist in your contract
   {
     "inputs": [
       {
         "internalType": "address",
-        "name": "owner",
+        "name": "",
         "type": "address"
       }
     ],
     "name": "getFishByOwner",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "fishId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getFish",
     "outputs": [
       {
         "components": [
@@ -95,9 +75,9 @@ export const DAGAT_NA_ABI = [
             "type": "bool"
           }
         ],
-        "internalType": "struct DagatNa.Fish",
+        "internalType": "struct DagatNa.Fish[]",
         "name": "",
-        "type": "tuple"
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",
@@ -116,23 +96,9 @@ export const DAGAT_NA_ABI = [
     "stateMutability": "nonpayable",
     "type": "function"
   },
-  // Alternative function names - try these instead
   {
     "inputs": [],
-    "name": "totalSupply",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "fishCount",
+    "name": "nextFishId",
     "outputs": [
       {
         "internalType": "uint256",
@@ -152,4 +118,4 @@ export const DAGAT_NA_ABI = [
   }
 ] as const;
 
-export const CONTRACT_ADDRESS = "0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8" as const;
+export const CONTRACT_ADDRESS = "0x7cc844ad3345a12a52ddb5b17166b039af834be2" as const;
