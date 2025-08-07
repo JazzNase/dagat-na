@@ -24,7 +24,7 @@ import { Icon } from "./components/DemoComponents";
 import { DagatNaHome } from "./components/DagatNaHome";
 import { FishGuide } from "./components/FishGuide";
 import { AdoptFish } from "./components/AdoptFish";
-import { FishTank } from "./components/FishTank";
+import { FishTank } from "./components/FishTank/FishTank";
 
 export default function App() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
