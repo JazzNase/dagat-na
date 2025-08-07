@@ -19,12 +19,12 @@ import {
   WalletDropdownDisconnect,
 } from "@coinbase/onchainkit/wallet";
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { Button } from "./components/DemoComponents";
-import { Icon } from "./components/DemoComponents";
-import { DagatNaHome } from "./components/DagatNaHome";
-import { FishGuide } from "./components/FishGuide";
-import { AdoptFish } from "./components/AdoptFish";
-import { FishTank } from "./components/FishTank/FishTank";
+import { Button } from "./components/Main/DemoComponents";
+import { Icon } from "./components/Main/DemoComponents";
+import { DagatNaHome } from "./components/Main/DagatNaHome";
+import { FishGuide } from "./components/Main/FishGuide";
+import { AdoptFish } from "./components/MainFeatures/AdoptFish";
+import { FishTank } from "./components/MainFeatures/FishTank/FishTank";
 
 export default function App() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "../DemoComponents";
+import { Button } from "../../Main/DemoComponents";
 
 interface TankStatusProps {
   isConnected: boolean;

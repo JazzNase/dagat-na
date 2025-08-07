@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
-import { useFishTank, type Fish } from "../../../hooks/useFishTank";
-import { CONTRACT_ADDRESS } from "../../../contracts/abi";
+import { useFishTank, type Fish } from "../../../../hooks/useFishTank";
+import { CONTRACT_ADDRESS } from "../../../../contracts/abi";
 import { OceanCleanup } from "../OceanCleanup";
 import { FishCard } from "./FishCard";
 import { FishDetails } from "./FishDetails";
@@ -142,7 +142,7 @@ export function FishTank() {
           
           {/* **DEBUG INFO** - Remove this after testing */}
           <div className="mt-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
-            <div><strong>Debug:</strong> Fish ID {Number(currentSelectedFish.id)}</div>
+            <div><strong>Fish ID:</strong> {Number(currentSelectedFish.id)}</div>
             <div><strong>XP:</strong> {Number(currentSelectedFish.experience)}</div>
             <div><strong>Last Updated:</strong> {new Date().toLocaleTimeString()}</div>
           </div>

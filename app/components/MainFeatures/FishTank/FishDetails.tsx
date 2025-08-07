@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "../DemoComponents";
-import { type Fish } from "../../../hooks/useFishTank";
+import { Button } from "../../Main/DemoComponents";
+import { type Fish } from "../../../../hooks/useFishTank";
 
 interface FishDetailsProps {
   fish: Fish;

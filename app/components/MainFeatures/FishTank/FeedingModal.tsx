@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
-import { Button } from "../DemoComponents";
-import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../../../contracts/abi";
-import { type Fish } from "../../../hooks/useFishTank";
+import { Button } from "../../Main/DemoComponents";
+import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../../../../contracts/abi";
+import { type Fish } from "../../../../hooks/useFishTank";
 
 type FeedingModalProps = {
   fish: Fish;

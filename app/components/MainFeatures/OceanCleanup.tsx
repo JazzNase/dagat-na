@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { Button } from "./DemoComponents";
-import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../../contracts/abi";
+import { Button } from "../Main/DemoComponents";
+import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../../../contracts/abi";
 
 type TrashItem = {
   id: number;

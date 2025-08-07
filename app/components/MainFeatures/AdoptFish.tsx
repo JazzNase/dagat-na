@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useBalance } from "wagmi";
 import { parseEther } from "viem";
-import { Button } from "./DemoComponents";
-import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../../contracts/abi";
+import { Button } from "../Main/DemoComponents";
+import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../../../contracts/abi";
 
 const FISH_SPECIES = [
   { name: "Tilapia", filipino: "Tilapya" },
@@ -17,6 +17,27 @@ const FISH_SPECIES = [
 
 const RARITIES = ["Bronze", "Silver", "Gold", "Diamond"];
 
+// Move fees to a configurable object
+const ADOPTION_FEES = {
+  Bronze: "0.00001",
+  Silver: "0.00002", 
+  Gold: "0.00005",
+  Diamond: "0.0001"
+} as const;
+
+// Configuration for network and UI
+const CONFIG = {
+  network: {
+    name: "Base Sepolia",
+    chainId: 84532,
+    explorerUrl: "https://sepolia.basescan.org"
+  },
+  ui: {
+    generateDelay: 2000, // milliseconds
+    maxDiamondFishCalculation: 470 // Remove this hardcoded calculation
+  }
+} as const;
+
 type GeneratedFish = {
   species: string;
   filipinoName: string;
@@ -27,6 +48,11 @@ export function AdoptFish() {
   const { isConnected, address } = useAccount();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedFish, setGeneratedFish] = useState<GeneratedFish | null>(null);
+  
+  // Get actual balance instead of hardcoding
+  const { data: balance } = useBalance({
+    address: address,
+  });
   
   // Contract interaction with better error handling
   const { 
@@ -67,22 +93,14 @@ export function AdoptFish() {
         rarity,
       });
       setIsGenerating(false);
-    }, 2000);
+    }, CONFIG.ui.generateDelay);
   };
 
   const handleAdoptFish = async () => {
     if (!generatedFish || !isConnected) return;
 
     try {
-      // UPDATED FEES - Increased to match contract requirements
-      const fees = {
-        Bronze: "0.00001",     // Increased from 0.000001
-        Silver: "0.00002",     // Increased from 0.000002  
-        Gold: "0.00005",       // Increased from 0.000005
-        Diamond: "0.0001"      // Increased from 0.00001
-      };
-      
-      const fee = fees[generatedFish.rarity as keyof typeof fees];
+      const fee = ADOPTION_FEES[generatedFish.rarity as keyof typeof ADOPTION_FEES];
 
       console.log("🚀 Starting adoption:", {
         species: generatedFish.species,
@@ -111,34 +129,44 @@ export function AdoptFish() {
   };
 
   const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case "Bronze": return "border-amber-300 bg-gradient-to-br from-amber-50 to-amber-100";
-      case "Silver": return "border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100";
-      case "Gold": return "border-yellow-300 bg-gradient-to-br from-yellow-50 to-yellow-100";
-      case "Diamond": return "border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100";
-      default: return "border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100";
-    }
+    const colors = {
+      Bronze: "border-amber-300 bg-gradient-to-br from-amber-50 to-amber-100",
+      Silver: "border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100",
+      Gold: "border-yellow-300 bg-gradient-to-br from-yellow-50 to-yellow-100",
+      Diamond: "border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100"
+    };
+    return colors[rarity as keyof typeof colors] || "border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100";
   };
 
   const getRarityEmoji = (rarity: string) => {
-    switch (rarity) {
-      case "Bronze": return "🥉";
-      case "Silver": return "🥈";
-      case "Gold": return "🥇";
-      case "Diamond": return "💎";
-      default: return "🐟";
-    }
+    const emojis = {
+      Bronze: "🥉",
+      Silver: "🥈", 
+      Gold: "🥇",
+      Diamond: "💎"
+    };
+    return emojis[rarity as keyof typeof emojis] || "🐟";
   };
 
   const getAdoptionFee = (rarity: string) => {
-    // UPDATED DISPLAY FEES
-    const fees = {
-      Bronze: "0.00001 ETH",     // Updated
-      Silver: "0.00002 ETH",     // Updated
-      Gold: "0.00005 ETH",       // Updated
-      Diamond: "0.0001 ETH"      // Updated
-    };
-    return fees[rarity as keyof typeof fees];
+    const fee = ADOPTION_FEES[rarity as keyof typeof ADOPTION_FEES];
+    return fee ? `${fee} ETH` : "Unknown";
+  };
+
+  // Calculate how many diamond fish user can afford
+  const calculateAffordableFish = () => {
+    if (!balance) return 0;
+    const balanceInEth = parseFloat(balance.formatted);
+    const diamondFee = parseFloat(ADOPTION_FEES.Diamond);
+    return Math.floor(balanceInEth / diamondFee);
+  };
+
+  // Check if user has enough balance for adoption
+  const hasEnoughBalance = (rarity: string) => {
+    if (!balance) return false;
+    const balanceInEth = parseFloat(balance.formatted);
+    const requiredFee = parseFloat(ADOPTION_FEES[rarity as keyof typeof ADOPTION_FEES]);
+    return balanceInEth >= requiredFee;
   };
 
   // Show success message after confirmation
@@ -160,12 +188,12 @@ export function AdoptFish() {
             Hash: {txHash.slice(0, 10)}...{txHash.slice(-8)}
           </div>
           <a 
-            href={`https://sepolia.basescan.org/tx/${txHash}`}
+            href={`${CONFIG.network.explorerUrl}/tx/${txHash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 hover:text-blue-800 underline text-sm"
           >
-            🔗 View on BaseScan
+            🔗 View on {CONFIG.network.name} Explorer
           </a>
         </div>
         
@@ -223,7 +251,7 @@ export function AdoptFish() {
       {/* Network Debug Info */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
         <div className="text-xs text-yellow-700">
-          🌐 Network: Base Sepolia (Chain ID: 84532)
+          🌐 Network: {CONFIG.network.name} (Chain ID: {CONFIG.network.chainId})
         </div>
         <div className="text-xs text-yellow-600">
           📋 Contract: {CONTRACT_ADDRESS.slice(0, 6)}...{CONTRACT_ADDRESS.slice(-4)}
@@ -243,12 +271,12 @@ export function AdoptFish() {
             Hash: {txHash.slice(0, 10)}...{txHash.slice(-8)}
           </div>
           <a 
-            href={`https://sepolia.basescan.org/tx/${txHash}`}
+            href={`${CONFIG.network.explorerUrl}/tx/${txHash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 hover:text-blue-800 underline text-xs"
           >
-            🔗 View on BaseScan
+            🔗 View on Explorer
           </a>
         </div>
       )}
@@ -259,7 +287,7 @@ export function AdoptFish() {
           🧪 Testnet Mode - Still Super Low Fees!
         </div>
         <div className="text-xs text-green-700">
-          Maximum cost: 0.0001 ETH - Perfect for testing!
+          Maximum cost: {ADOPTION_FEES.Diamond} ETH - Perfect for testing!
         </div>
       </div>
 
@@ -309,20 +337,23 @@ export function AdoptFish() {
               <div className="text-xs text-gray-600 mt-1">
                 💰 Testnet pricing!
               </div>
-              <div className="text-xs text-green-600 mt-1">
-                ✅ You have enough ETH for this adoption!
+              <div className={`text-xs mt-1 ${hasEnoughBalance(generatedFish.rarity) ? 'text-green-600' : 'text-red-600'}`}>
+                {hasEnoughBalance(generatedFish.rarity) ? 
+                  "✅ You have enough ETH for this adoption!" : 
+                  "❌ Insufficient ETH balance"}
               </div>
             </div>
 
             <Button
               onClick={handleAdoptFish}
-              disabled={isAdopting || isConfirming}
+              disabled={isAdopting || isConfirming || !hasEnoughBalance(generatedFish.rarity)}
               variant="primary"
               size="md"
               className="w-full"
             >
               {isAdopting ? "🔄 Sending Transaction..." : 
                isConfirming ? "⏳ Confirming..." : 
+               !hasEnoughBalance(generatedFish.rarity) ? "💰 Insufficient Balance" :
                "🏠 Adopt This Fish"}
             </Button>
           </div>
@@ -340,28 +371,31 @@ export function AdoptFish() {
         </div>
       )}
 
-      {/* Price Comparison - UPDATED */}
+      {/* Price Comparison - Now using dynamic fees */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-medium text-blue-800 mb-2">💰 Updated Testnet Pricing</h3>
+        <h3 className="font-medium text-blue-800 mb-2">💰 Testnet Pricing</h3>
         <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
-          <div>🥉 Bronze: 0.00001 ETH</div>
-          <div>🥈 Silver: 0.00002 ETH</div>
-          <div>🥇 Gold: 0.00005 ETH</div>
-          <div>💎 Diamond: 0.0001 ETH</div>
+          {Object.entries(ADOPTION_FEES).map(([rarity, fee]) => (
+            <div key={rarity}>
+              {getRarityEmoji(rarity)} {rarity}: {fee} ETH
+            </div>
+          ))}
         </div>
-        <div className="text-xs text-blue-600 mt-2 text-center">
-          Your Balance: 0.047 ETH - You can adopt ~470 Diamond fish! 🐟
-        </div>
+        {balance && (
+          <div className="text-xs text-blue-600 mt-2 text-center">
+            Your Balance: {parseFloat(balance.formatted).toFixed(6)} ETH - You can adopt ~{calculateAffordableFish()} Diamond fish! 🐟
+          </div>
+        )}
       </div>
 
       {/* Blockchain Integration Notice */}
       <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
         <h3 className="font-medium text-purple-800 mb-2">⚡ On-Chain Features</h3>
         <ul className="text-sm text-purple-700 space-y-1">
-          <li>• Each fish is minted as an NFT on Base Sepolia</li>
+          <li>• Each fish is minted as an NFT on {CONFIG.network.name}</li>
           <li>• Fish data is stored permanently on blockchain</li>
           <li>• Feed and care for your fish to level them up</li>
-          <li>• Updated fees to match contract requirements</li>
+          <li>• Dynamic pricing based on rarity</li>
         </ul>
       </div>
     </div>

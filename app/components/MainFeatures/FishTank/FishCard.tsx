@@ -1,6 +1,6 @@
 "use client";
 
-import { type Fish } from "../../../hooks/useFishTank";
+import { type Fish } from "../../../../hooks/useFishTank";
 
 interface FishCardProps {
   fish: Fish;
