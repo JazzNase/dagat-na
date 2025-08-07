@@ -166,6 +166,15 @@ export default function App() {
               <span>✅ NFT Minting</span>
               <span>✅ Fish Tank</span>
             </div>
+            
+            {/* Development Warning */}
+            <div className="mt-3 pt-2 border-t border-green-200">
+              <p className="text-xs text-orange-700 leading-relaxed">
+                ⚠️ <strong>Development Phase:</strong> This is still in testing phase. 
+                Fish or progress might be erased when uploading new contract address 
+                to get updated and fix bugs for the future. Thanks for participation!
+              </p>
+            </div>
           </div>
         )}
 

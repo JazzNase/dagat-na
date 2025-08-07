@@ -30,7 +30,7 @@ const FISH_SPECIES = [
   {
     species: 'Grouper',
     filipino: 'Lapu-lapu',
-    emoji: '🟡',
+    emoji: '🐡',
     habitat: 'Coral reefs',
     description: 'Large predatory fish with spotted patterns, highly prized',
     rarity: 'Uncommon',
@@ -40,7 +40,7 @@ const FISH_SPECIES = [
   {
     species: 'Snappers',
     filipino: 'Maya-maya',
-    emoji: '🔴',
+    emoji: '🐟',
     habitat: 'Rocky reefs',
     description: 'Red-colored fish common in Filipino markets and cuisine',
     rarity: 'Common',

@@ -462,8 +462,81 @@ export const DAGAT_NA_ABI = [
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTotalParticipants",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getGlobalStats",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "totalParticipants",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalFish",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "averageFishPerParticipant",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "participant",
+        "type": "address"
+      }
+    ],
+    "name": "getParticipantFishCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSpeciesStats",
+    "outputs": [
+      {
+        "internalType": "string[]",
+        "name": "speciesNames",
+        "type": "string[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "counts",
+        "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   }
 ] as const;
 
 // 🎯 UPDATE THIS WITH YOUR NEW CONTRACT ADDRESS
-export const CONTRACT_ADDRESS = "0x049da42b1a6f07015831cd84a47990736cabd972" as const;
+export const CONTRACT_ADDRESS = "0x1e3a6360fed8fb5b53ef127bd56bfb47cfac267f" as const;

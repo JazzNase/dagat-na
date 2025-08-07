@@ -136,9 +136,90 @@ contract DagatNa {
     function getTotalFishCount() external view returns (uint256) {
         return nextFishId - 1;
     }
+
+    // 📊 NEW ANALYTICS FUNCTIONS
+    
+    // Get total unique participants/players
+    function getTotalParticipants() external view returns (uint256) {
+        uint256 participantCount = 0;
+        
+        for (uint256 i = 1; i < nextFishId; i++) {
+            address owner = fishToOwner[i];
+            if (owner != address(0)) {
+                // Check if this is the first fish we've seen from this owner
+                bool isFirstFish = true;
+                for (uint256 j = 1; j < i; j++) {
+                    if (fishToOwner[j] == owner) {
+                        isFirstFish = false;
+                        break;
+                    }
+                }
+                if (isFirstFish) {
+                    participantCount++;
+                }
+            }
+        }
+        
+        return participantCount;
+    }
+
+    // Get comprehensive stats in one call
+    function getGlobalStats() external view returns (
+        uint256 totalParticipants,
+        uint256 totalFish,
+        uint256 averageFishPerParticipant
+    ) {
+        totalParticipants = this.getTotalParticipants();
+        totalFish = nextFishId - 1;
+        
+        if (totalParticipants > 0) {
+            averageFishPerParticipant = totalFish / totalParticipants;
+        } else {
+            averageFishPerParticipant = 0;
+        }
+        
+        return (totalParticipants, totalFish, averageFishPerParticipant);
+    }
+
+    // Get fish count for specific participant
+    function getParticipantFishCount(address participant) external view returns (uint256) {
+        return ownerToFishes[participant].length;
+    }
+
+    // Get species distribution stats
+    function getSpeciesStats() external view returns (
+        string[] memory speciesNames,
+        uint256[] memory counts
+    ) {
+        speciesNames = new string[](species.length);
+        counts = new uint256[](species.length);
+        
+        // Initialize arrays
+        for (uint256 i = 0; i < species.length; i++) {
+            speciesNames[i] = species[i];
+            counts[i] = 0;
+        }
+        
+        // Count each species
+        for (uint256 fishId = 1; fishId < nextFishId; fishId++) {
+            if (fishToOwner[fishId] != address(0)) {
+                string memory fishSpecies = fishes[fishId].species;
+                
+                // Find matching species and increment count
+                for (uint256 j = 0; j < species.length; j++) {
+                    if (keccak256(bytes(fishSpecies)) == keccak256(bytes(species[j]))) {
+                        counts[j]++;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        return (speciesNames, counts);
+    }
     
     function withdraw() external {
-        require(msg.sender == 0x6DEB9d6341cA1421a9d254A4F3A1883Ea3B8CCBe, "Only owner"); // Your address
+        require(msg.sender == 0x6DEB9d6341cA1421a9d254A4F3A1883Ea3B8CCBe, "Only owner");
         payable(msg.sender).transfer(address(this).balance);
     }
 }

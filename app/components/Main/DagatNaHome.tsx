@@ -1,7 +1,8 @@
 "use client";
 
-import { useAccount } from 'wagmi'
+import { useAccount, useReadContract } from 'wagmi'
 import { Button } from './DemoComponents'
+import { CONTRACT_ADDRESS, DAGAT_NA_ABI } from '../../../contracts/abi'
 
 type DagatNaHomeProps = {
   setActiveTab: (tab: string) => void;
@@ -9,6 +10,17 @@ type DagatNaHomeProps = {
 
 export function DagatNaHome({ setActiveTab }: DagatNaHomeProps) {
   const { address } = useAccount()
+
+  // 📊 Fetch analytics data
+  const { data: globalStats } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: DAGAT_NA_ABI,
+    functionName: 'getGlobalStats',
+  })
+
+  const totalParticipants = globalStats ? Number(globalStats[0]) : 0
+  const totalFish = globalStats ? Number(globalStats[1]) : 0
+  const averageFishPerParticipant = globalStats ? Number(globalStats[2]) : 0
 
   return (
     <div className="space-y-6">
@@ -21,6 +33,25 @@ export function DagatNaHome({ setActiveTab }: DagatNaHomeProps) {
         <p className="text-sm text-gray-600 px-4">
           Adopt, raise, and care for Filipino fish species in this Tamagotchi-style mini app
         </p>
+      </div>
+
+      {/* 📊 ANALYTICS SUMMARY */}
+      <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-4">
+        <h3 className="font-bold text-sm text-blue-800 mb-3 text-center">📊 Community Stats</h3>
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="bg-white rounded-lg p-3">
+            <div className="text-xl font-bold text-blue-600">{totalParticipants}</div>
+            <div className="text-xs text-gray-600">Players</div>
+          </div>
+          <div className="bg-white rounded-lg p-3">
+            <div className="text-xl font-bold text-green-600">{totalFish}</div>
+            <div className="text-xs text-gray-600">Fish Adopted</div>
+          </div>
+          <div className="bg-white rounded-lg p-3">
+            <div className="text-xl font-bold text-purple-600">{averageFishPerParticipant}</div>
+            <div className="text-xs text-gray-600">Avg per Player</div>
+          </div>
+        </div>
       </div>
 
       {/* Connection Status */}
@@ -120,14 +151,15 @@ export function DagatNaHome({ setActiveTab }: DagatNaHomeProps) {
       {/* Fish Species Preview */}
       <div className="space-y-2">
         <h3 className="font-bold text-sm text-center">🐟 Featured Fish Species</h3>
-        <div className="grid grid-cols-3 gap-2 text-xs">
-          <FishPreview name="Bangus" emoji="🐟" rarity="National" />
-          <FishPreview name="Tilapia" emoji="🐠" rarity="Common" />
-          <FishPreview name="Lapu-lapu" emoji="🟡" rarity="Rare" />
-          <FishPreview name="Maya-maya" emoji="🔴" rarity="Popular" />
-          <FishPreview name="Tambakol" emoji="🐋" rarity="Ocean" />
-          <FishPreview name="Dilis" emoji="🦈" rarity="Tiny" />
-        </div>
+<div className="grid grid-cols-3 gap-2 text-xs">
+  <FishPreview name="Bangus" emoji="🐟" rarity="National" />
+  <FishPreview name="Tilapia" emoji="🐠" rarity="Common" />
+  <FishPreview name="Lapu-lapu" emoji="🐡" rarity="Rare" />
+  <FishPreview name="Maya-maya" emoji="🐟" rarity="Popular" />
+  <FishPreview name="Tambakol" emoji="🐋" rarity="Ocean" />
+  <FishPreview name="Dilis" emoji="🐟" rarity="Tiny" />
+</div>
+
       </div>
     </div>
   )
