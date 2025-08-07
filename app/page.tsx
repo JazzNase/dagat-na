@@ -106,24 +106,6 @@ export default function App() {
   return (
     <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
       <div className="w-full max-w-md mx-auto px-4 py-3">
-        {/* Updated Development Notice Banner */}
-        <div className="mb-3 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-3 text-center">
-          <div className="flex items-center justify-center space-x-2 mb-1">
-            <span className="text-green-600">🔗</span>
-            <span className="text-sm font-semibold text-green-800">Phase 2: On-Chain Live!</span>
-            <span className="text-green-600">🔗</span>
-          </div>
-          <p className="text-xs text-green-700 leading-relaxed">
-            Full blockchain integration with <strong>Base Sepolia</strong>! 
-            Fish adoption & tank management ready.
-          </p>
-          <div className="mt-2 flex justify-center space-x-4 text-xs text-green-600">
-            <span>✅ Smart Contract</span>
-            <span>✅ NFT Minting</span>
-            <span>✅ Fish Tank</span>
-          </div>
-        </div>
-
         <header className="flex justify-between items-center mb-3 h-11">
           <div className="flex items-center space-x-2">
             {/* Back Button */}
@@ -167,7 +149,25 @@ export default function App() {
           {renderContent()}
         </main>
 
-        <footer className="mt-2 pt-4 flex justify-center">
+        {/* Development Notice Banner - moved before footer */}
+        <div className="mt-6 mb-3 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-3 text-center">
+          <div className="flex items-center justify-center space-x-2 mb-1">
+            <span className="text-green-600">🔗</span>
+            <span className="text-sm font-semibold text-green-800">Phase 2: On-Chain Live!</span>
+            <span className="text-green-600">🔗</span>
+          </div>
+          <p className="text-xs text-green-700 leading-relaxed">
+            Full blockchain integration with <strong>Base Sepolia</strong>! 
+            Fish adoption & tank management ready.
+          </p>
+          <div className="mt-2 flex justify-center space-x-4 text-xs text-green-600">
+            <span>✅ Smart Contract</span>
+            <span>✅ NFT Minting</span>
+            <span>✅ Fish Tank</span>
+          </div>
+        </div>
+
+        <footer className="pt-4 flex flex-col items-center space-y-2">
           <Button
             variant="ghost"
             size="sm"
@@ -175,6 +175,15 @@ export default function App() {
             onClick={() => openUrl("https://base.org/builders/minikit")}
           >
             🐟 Dagat na • Built on Base with MiniKit
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-[var(--ock-text-foreground-muted)] text-xs"
+            onClick={() => openUrl("https://www.facebook.com/jazz.nase.14")}
+          >
+            👨‍💻 Builder: Jazz Michael Nase
           </Button>
         </footer>
       </div>
