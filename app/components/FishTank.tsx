@@ -254,7 +254,7 @@ export function FishTank() {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
           <h4 className="font-medium text-blue-800 mb-2">🔧 Possible Solutions:</h4>
           <ul className="text-sm text-blue-700 text-left space-y-1">
-            <li>• Make sure you're connected to Base Sepolia network</li>
+            <li>• Make sure you&apos;re connected to Base Sepolia network</li>
             <li>• Contract might be deployed to Remix VM instead of real Base Sepolia</li>
             <li>• Check if contract address is correct</li>
             <li>• Try refreshing after switching networks</li>
