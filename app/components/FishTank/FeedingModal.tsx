@@ -15,6 +15,8 @@ type FeedingModalProps = {
 export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps) {
   const { address, isConnected } = useAccount();
   const [feedingMethod, setFeedingMethod] = useState<"regular" | "fishfood" | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [xpGained, setXpGained] = useState(0);
 
   // Read fish food balance
   const { data: fishFoodBalance, refetch: refetchBalance } = useReadContract({
@@ -33,6 +35,7 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
     mutation: {
       onSuccess: () => {
         console.log("✅ Regular feeding successful!");
+        setXpGained(10);
       },
       onError: (error) => {
         console.error("❌ Regular feeding failed:", error);
@@ -49,6 +52,7 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
     mutation: {
       onSuccess: () => {
         console.log("✅ Fish food feeding successful!");
+        setXpGained(20);
         refetchBalance(); // Refresh balance after feeding
       },
       onError: (error) => {
@@ -69,10 +73,18 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
   // Handle successful feeding
   useEffect(() => {
     if (isRegularConfirmed || isFishFoodConfirmed) {
+      setShowSuccess(true);
+      
+      // **FORCE REFRESH IMMEDIATELY** when transaction confirms
+      console.log("🔄 Transaction confirmed, refreshing fish data...");
       onFeedSuccess();
-      setTimeout(() => {
+      
+      // Auto-close after showing success
+      const timer = setTimeout(() => {
         onClose();
-      }, 2000); // Close modal after 2 seconds
+      }, 3000); // Close after 3 seconds
+      
+      return () => clearTimeout(timer);
     }
   }, [isRegularConfirmed, isFishFoodConfirmed, onFeedSuccess, onClose]);
 
@@ -127,18 +139,26 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
             </div>
           </div>
 
-          {/* Show Transaction Success */}
-          {(isRegularConfirmed || isFishFoodConfirmed) && (
+          {/* Show Transaction Success with XP details */}
+          {showSuccess && (isRegularConfirmed || isFishFoodConfirmed) && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-              <div className="text-green-800 font-medium">🎉 Feeding Successful!</div>
-              <div className="text-sm text-green-700 mt-1">
-                {isFishFoodConfirmed ? "+20 XP (Fish Food Bonus!)" : "+10 XP"}
+              <div className="text-green-800 font-medium mb-2">🎉 Feeding Successful!</div>
+              <div className="text-sm text-green-700 space-y-1">
+                <div><strong>XP Gained:</strong> +{xpGained}</div>
+                <div><strong>Previous XP:</strong> {fishExp}</div>
+                <div><strong>New XP:</strong> {fishExp + xpGained}</div>
+                {isFishFoodConfirmed && (
+                  <div className="text-orange-600 font-medium">🍤 Fish Food Bonus Applied!</div>
+                )}
+              </div>
+              <div className="text-xs text-green-600 mt-2">
+                ✅ Fish data updating automatically...
               </div>
             </div>
           )}
 
           {/* Feeding Method Selection */}
-          {!feedingMethod && !isRegularPending && !isFishFoodPending && !isRegularConfirmed && !isFishFoodConfirmed && (
+          {!feedingMethod && !isRegularPending && !isFishFoodPending && !showSuccess && (
             <div className="space-y-3">
               <h3 className="font-medium text-gray-800 mb-3">Choose Feeding Method:</h3>
               
@@ -196,7 +216,7 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
           )}
 
           {/* Confirmation Screen */}
-          {feedingMethod && !isRegularPending && !isFishFoodPending && !isRegularConfirmed && !isFishFoodConfirmed && (
+          {feedingMethod && !isRegularPending && !isFishFoodPending && !showSuccess && (
             <div className="space-y-4">
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <div className="text-lg font-medium mb-2">
@@ -243,12 +263,15 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
                 <div className="text-2xl mb-2">🔄</div>
                 <div className="font-medium">Feeding your fish...</div>
                 <div className="text-sm text-gray-600">Please wait for blockchain confirmation</div>
+                <div className="text-xs text-blue-600 mt-2">
+                  Transaction sent! Waiting for confirmation...
+                </div>
               </div>
             </div>
           )}
 
-          {/* Close button (only show if not in loading state) */}
-          {!isRegularPending && !isFishFoodPending && !feedingMethod && (
+          {/* Close button (only show if not in loading/success state) */}
+          {!isRegularPending && !isFishFoodPending && !feedingMethod && !showSuccess && (
             <div className="mt-4">
               <Button
                 onClick={onClose}
