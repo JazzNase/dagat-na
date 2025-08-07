@@ -156,8 +156,28 @@ export const DAGAT_NA_ABI = [
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTotalFishCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ] as const;
 
-// Contract address - replace with actual deployed contract
-export const CONTRACT_ADDRESS = "0x1234567890123456789012345678901234567890" as const;
+// 🚀 YOUR DEPLOYED CONTRACT ADDRESS - NOW LIVE!
+export const CONTRACT_ADDRESS = "0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8" as const;
