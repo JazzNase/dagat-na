@@ -3,6 +3,7 @@
 import { useAccount } from "wagmi";
 import { Button } from "./DemoComponents";
 import { useFishTank, type Fish } from "../../hooks/useFishTank";
+import { CONTRACT_ADDRESS } from "../../contracts/abi";
 
 // Fish Tank UI Component
 function FishCard({ fish, onSelect, isSelected }: { 
@@ -175,14 +176,18 @@ function FishDetails({ fish, onFeed, isFeedingPending }: {
 }
 
 export function FishTank() {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { 
     fish, 
     selectedFish, 
     setSelectedFish, 
     isLoading, 
     handleFeedFish, 
-    isFeedingPending 
+    isFeedingPending,
+    refreshFish,
+    error,
+    totalFishCount,
+    totalCountError
   } = useFishTank();
 
   if (!isConnected) {
@@ -209,6 +214,66 @@ export function FishTank() {
     );
   }
 
+  // Show error state with detailed debugging
+  if (error || totalCountError) {
+    return (
+      <div className="text-center p-8">
+        <div className="text-6xl mb-4">⚠️</div>
+        <h2 className="text-xl font-bold mb-2 text-red-600">Contract Connection Issue</h2>
+        
+        {/* Contract Status */}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <h3 className="font-medium text-red-800 mb-2">🔍 Diagnosis:</h3>
+          <div className="text-sm text-red-700 space-y-2 text-left">
+            <div><strong>Contract Address:</strong> {CONTRACT_ADDRESS}</div>
+            <div><strong>Your Address:</strong> {address}</div>
+            <div><strong>Network:</strong> Base Sepolia (84532)</div>
+            <div><strong>Total Fish Contract Call:</strong> {totalCountError ? "❌ Failed" : `✅ Success (${totalFishCount})`}</div>
+            <div><strong>Get Fish Call:</strong> {error ? "❌ Failed" : "✅ Success"}</div>
+          </div>
+        </div>
+
+        {/* Detailed Error */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <h4 className="font-medium text-yellow-800 mb-2">📋 Error Details:</h4>
+          <div className="text-xs text-yellow-700 text-left">
+            {totalCountError && (
+              <div className="mb-2">
+                <strong>Contract Error:</strong> {totalCountError.message}
+              </div>
+            )}
+            {error && (
+              <div>
+                <strong>Fish Query Error:</strong> {error.message}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Possible Solutions */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <h4 className="font-medium text-blue-800 mb-2">🔧 Possible Solutions:</h4>
+          <ul className="text-sm text-blue-700 text-left space-y-1">
+            <li>• Make sure you're connected to Base Sepolia network</li>
+            <li>• Contract might be deployed to Remix VM instead of real Base Sepolia</li>
+            <li>• Check if contract address is correct</li>
+            <li>• Try refreshing after switching networks</li>
+          </ul>
+        </div>
+
+        <div className="space-y-2">
+          <Button onClick={refreshFish} variant="primary" size="md">
+            🔄 Try Again
+          </Button>
+          
+          <div className="text-xs text-gray-500">
+            If the issue persists, the contract might need to be redeployed to Base Sepolia
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (fish.length === 0) {
     return (
       <div className="text-center p-8">
@@ -217,10 +282,42 @@ export function FishTank() {
         <p className="text-gray-600 mb-4">
           You don&apos;t have any fish yet. Start by adopting some!
         </p>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-700">
-            💡 Go to the &quot;Adopt Fish&quot; section to get your first fish!
-          </p>
+
+        {/* Contract Status - Success */}
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+          <h4 className="font-medium text-green-800 mb-2">✅ Contract Connected!</h4>
+          <div className="text-sm text-green-700 space-y-1">
+            <div>Total fish in ecosystem: {totalFishCount}</div>
+            <div>Your fish: 0</div>
+            <div>Contract is working properly!</div>
+          </div>
+        </div>
+
+        {/* Debug Info */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <h4 className="font-medium text-yellow-800 mb-2">🔍 Debug Info:</h4>
+          <div className="text-xs text-yellow-700 space-y-1 text-left">
+            <div>Connected: {isConnected ? "✅ Yes" : "❌ No"}</div>
+            <div>Address: {address?.slice(0, 6)}...{address?.slice(-4) || "None"}</div>
+            <div>Contract: {CONTRACT_ADDRESS.slice(0, 6)}...{CONTRACT_ADDRESS.slice(-4)}</div>
+            <div>Fish Count: {fish.length}</div>
+            <div>Loading: {isLoading ? "Yes" : "No"}</div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <Button onClick={refreshFish} variant="outline" size="md">
+            🔄 Refresh Tank
+          </Button>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-700">
+              💡 Go to the &quot;Adopt Fish&quot; section to get your first fish!
+            </p>
+            <p className="text-xs text-blue-600 mt-2">
+              If you just adopted a fish, try refreshing or wait a moment for the blockchain to sync.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -228,9 +325,22 @@ export function FishTank() {
 
   return (
     <div className="space-y-6 p-4">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">🐠 Your Fish Tank</h2>
-        <p className="text-gray-600">You have {fish.length} fish in your collection</p>
+      {/* Header with Refresh Button */}
+      <div className="flex justify-between items-center">
+        <div className="text-center flex-1">
+          <h2 className="text-2xl font-bold mb-2">🐠 Your Fish Tank</h2>
+          <p className="text-gray-600">You have {fish.length} fish in your collection</p>
+        </div>
+        <Button onClick={refreshFish} variant="outline" size="sm">
+          🔄
+        </Button>
+      </div>
+
+      {/* Success Notice */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+        <div className="text-sm text-green-700">
+          🎉 Great! Your fish are loaded from the blockchain!
+        </div>
       </div>
 
       {/* Fish Grid */}

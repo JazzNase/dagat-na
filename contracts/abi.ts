@@ -22,6 +22,7 @@ export const DAGAT_NA_ABI = [
     "stateMutability": "payable",
     "type": "function"
   },
+  // Try different function names that might exist in your contract
   {
     "inputs": [
       {
@@ -33,67 +34,12 @@ export const DAGAT_NA_ABI = [
     "name": "getFishByOwner",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "id",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "species",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "filipinoName",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "rarity",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "level",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "experience",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lastFed",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "isAlive",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct DagatNa.Fish[]",
+        "internalType": "uint256[]",
         "name": "",
-        "type": "tuple[]"
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "fishId",
-        "type": "uint256"
-      }
-    ],
-    "name": "feedFish",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -158,8 +104,35 @@ export const DAGAT_NA_ABI = [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "fishId",
+        "type": "uint256"
+      }
+    ],
+    "name": "feedFish",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  // Alternative function names - try these instead
+  {
     "inputs": [],
-    "name": "getTotalFishCount",
+    "name": "totalSupply",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "fishCount",
     "outputs": [
       {
         "internalType": "uint256",
@@ -179,5 +152,4 @@ export const DAGAT_NA_ABI = [
   }
 ] as const;
 
-// 🚀 YOUR DEPLOYED CONTRACT ADDRESS - NOW LIVE!
 export const CONTRACT_ADDRESS = "0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8" as const;
