@@ -23,7 +23,7 @@ import { Button } from "./components/Main/DemoComponents";
 import { Icon } from "./components/Main/DemoComponents";
 import { DagatNaHome } from "./components/Main/DagatNaHome";
 import { FishGuide } from "./components/Main/FishGuide";
-import { AdoptFish } from "./components/MainFeatures/AdoptFish";
+import { AdoptFish } from "./components/MainFeatures/AdoptFish/AdoptFish";
 import { FishTank } from "./components/MainFeatures/FishTank/FishTank";
 
 export default function App() {
