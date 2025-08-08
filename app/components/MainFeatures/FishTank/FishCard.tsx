@@ -54,13 +54,15 @@ export function FishCard({ fish, onSelect, isSelected }: FishCardProps) {
         <div className="text-2xl mb-1">
           {getRarityEmoji(fish.rarity)} 🐟
         </div>
-        <h3 className="font-bold text-sm text-gray-800">
-          {fish.species}
+        <h3 className="font-bold text-base text-blue-900 mb-1">
+          {fish.name ? fish.name : fish.species}
         </h3>
+        <div className="text-xs text-gray-700 mb-1">
+          {fish.species} &middot; {fish.rarity}
+        </div>
         <p className="text-xs text-gray-600 mb-2">
           {fish.filipinoName}
         </p>
-        
         <div className="bg-white bg-opacity-50 rounded-lg p-2 mb-2">
           <div className="grid grid-cols-2 gap-1 text-xs">
             <div>
@@ -73,7 +75,6 @@ export function FishCard({ fish, onSelect, isSelected }: FishCardProps) {
             </div>
           </div>
         </div>
-
         <div className={`text-xs font-medium ${health.color}`}>
           {health.status}
         </div>

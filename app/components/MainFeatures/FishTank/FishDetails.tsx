@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "../../Main/DemoComponents";
+import { useWriteContract } from "wagmi";
+import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../../../../contracts/abi";
 import { type Fish } from "../../../../hooks/useFishTank";
 
 interface FishDetailsProps {
@@ -10,6 +13,28 @@ interface FishDetailsProps {
 }
 
 export function FishDetails({ fish, onFeed, isFeedingPending }: FishDetailsProps) {
+  const [newName, setNewName] = useState("");
+  const [isRenaming, setIsRenaming] = useState(false);
+
+  const { writeContract: renameFish, isPending: isRenamePending } = useWriteContract({
+    mutation: {
+      onSuccess: () => {
+        setNewName("");
+        setIsRenaming(false);
+      }
+    }
+  });
+
+  const handleRename = async () => {
+    if (!newName) return;
+    await renameFish({
+      abi: DAGAT_NA_ABI,
+      address: CONTRACT_ADDRESS,
+      functionName: "renameFish",
+      args: [fish.id, newName]
+    });
+  };
+
   const getExperienceToNext = () => {
     const currentXP = Number(fish.experience);
     const progress = (currentXP % 100) / 100 * 100;
@@ -32,10 +57,49 @@ export function FishDetails({ fish, onFeed, isFeedingPending }: FishDetailsProps
     <div className="bg-white rounded-xl p-6 border border-gray-200">
       <div className="text-center mb-4">
         <h2 className="text-xl font-bold text-gray-800 mb-1">
-          {fish.species}
+          {fish.name || fish.species}
         </h2>
         <p className="text-gray-600">{fish.filipinoName}</p>
         <div className="text-3xl my-3">🐟</div>
+        {/* 🆕 Rename UI */}
+        <div className="mt-2">
+          {isRenaming ? (
+            <div className="flex items-center gap-2 justify-center">
+              <input
+                type="text"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                placeholder="Enter new name"
+                className="border rounded px-2 py-1"
+                maxLength={32}
+              />
+              <Button
+                onClick={handleRename}
+                disabled={isRenamePending}
+                variant="primary"
+                size="sm"
+              >
+                Save
+              </Button>
+              <Button
+                onClick={() => setIsRenaming(false)}
+                variant="ghost"
+                size="sm"
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={() => setIsRenaming(true)}
+              variant="ghost"
+              size="sm"
+              className="text-blue-600 underline"
+            >
+              Rename Fish
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-3 mb-4">

@@ -265,128 +265,58 @@ export const DAGAT_NA_ABI = [
     "stateMutability": "view",
     "type": "function"
   },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "fishId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getFish",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "id",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "species",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "filipinoName",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "rarity",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "level",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "experience",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lastFed",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "isAlive",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct DagatNa.Fish",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      }
-    ],
-    "name": "getFishByOwner",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "id",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "species",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "filipinoName",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "rarity",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "level",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "experience",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lastFed",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "isAlive",
-            "type": "bool"
-          }
-        ],
-        "internalType": "struct DagatNa.Fish[]",
-        "name": "",
-        "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
+{
+  "inputs": [
+    { "internalType": "uint256", "name": "fishId", "type": "uint256" }
+  ],
+  "name": "getFish",
+  "outputs": [
+    {
+      "components": [
+        { "internalType": "uint256", "name": "id", "type": "uint256" },
+        { "internalType": "string", "name": "species", "type": "string" },
+        { "internalType": "string", "name": "filipinoName", "type": "string" },
+        { "internalType": "string", "name": "rarity", "type": "string" },
+        { "internalType": "string", "name": "name", "type": "string" }, // 🆕 Add this line!
+        { "internalType": "uint256", "name": "level", "type": "uint256" },
+        { "internalType": "uint256", "name": "experience", "type": "uint256" },
+        { "internalType": "uint256", "name": "lastFed", "type": "uint256" },
+        { "internalType": "bool", "name": "isAlive", "type": "bool" }
+      ],
+      "internalType": "struct DagatNa.Fish",
+      "name": "",
+      "type": "tuple"
+    }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+},
+{
+  "inputs": [
+    { "internalType": "address", "name": "owner", "type": "address" }
+  ],
+  "name": "getFishByOwner",
+  "outputs": [
+    {
+      "components": [
+        { "internalType": "uint256", "name": "id", "type": "uint256" },
+        { "internalType": "string", "name": "species", "type": "string" },
+        { "internalType": "string", "name": "filipinoName", "type": "string" },
+        { "internalType": "string", "name": "rarity", "type": "string" },
+        { "internalType": "string", "name": "name", "type": "string" }, // 🆕 Add this line!
+        { "internalType": "uint256", "name": "level", "type": "uint256" },
+        { "internalType": "uint256", "name": "experience", "type": "uint256" },
+        { "internalType": "uint256", "name": "lastFed", "type": "uint256" },
+        { "internalType": "bool", "name": "isAlive", "type": "bool" }
+      ],
+      "internalType": "struct DagatNa.Fish[]",
+      "name": "",
+      "type": "tuple[]"
+    }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+},
   {
     "inputs": [
       {
@@ -535,8 +465,30 @@ export const DAGAT_NA_ABI = [
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "string", "name": "_species", "type": "string" },
+      { "internalType": "string", "name": "_filipinoName", "type": "string" },
+      { "internalType": "string", "name": "_rarity", "type": "string" },
+      { "internalType": "string", "name": "_name", "type": "string" }
+    ],
+    "name": "adoptFish",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "fishId", "type": "uint256" },
+      { "internalType": "string", "name": "newName", "type": "string" }
+    ],
+    "name": "renameFish",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ] as const;
 
 // 🎯 UPDATE THIS WITH YOUR NEW CONTRACT ADDRESS
-export const CONTRACT_ADDRESS = "0x1e3a6360fed8fb5b53ef127bd56bfb47cfac267f" as const;
+export const CONTRACT_ADDRESS = "0xffd54ad2c8b4c8a0f46637905c1303c9e9296ff4" as const;
