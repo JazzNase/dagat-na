@@ -14,9 +14,10 @@ export function AdoptFish() {
   const { isConnected, address } = useAccount();
   const [generatedFish, setGeneratedFish] = useState<GeneratedFish | null>(null);
   const [txHash, setTxHash] = useState<string>("");
-  
+  const [customName, setCustomName] = useState(""); // 🆕 Add name state
+
   const { data: balance } = useBalance({ address });
-  
+
   const { 
     writeContract: adoptFish, 
     isPending: isAdopting,
@@ -49,7 +50,12 @@ export function AdoptFish() {
         abi: DAGAT_NA_ABI,
         address: CONTRACT_ADDRESS,
         functionName: 'adoptFish',
-        args: [generatedFish.species, generatedFish.filipinoName, generatedFish.rarity],
+        args: [
+          generatedFish.species,
+          generatedFish.filipinoName,
+          generatedFish.rarity,
+          customName || `Isdang ${generatedFish.species}` // 🆕 Pass name
+        ],
         value: parseEther(fee),
       });
     } catch (error) {
@@ -75,6 +81,7 @@ export function AdoptFish() {
   const resetState = () => {
     setGeneratedFish(null);
     setTxHash("");
+    setCustomName(""); // 🆕 Reset name
     resetContract(); // Reset the wagmi contract state
   };
 
@@ -103,14 +110,28 @@ export function AdoptFish() {
       {!generatedFish ? (
         <FishGenerator onFishGenerated={setGeneratedFish} />
       ) : (
-        <FishDisplayCard
-          fish={generatedFish}
-          onAdopt={handleAdoptFish}
-          onGenerateAnother={resetState}
-          hasEnoughBalance={hasEnoughBalance(generatedFish.rarity)}
-          isAdopting={isAdopting}
-          isConfirming={isConfirming}
-        />
+        <>
+          {/* 🆕 Name input */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Fish Name</label>
+            <input
+              type="text"
+              value={customName}
+              onChange={e => setCustomName(e.target.value)}
+              placeholder={`Isdang ${generatedFish.species}`}
+              className="w-full border rounded px-3 py-2"
+              maxLength={32}
+            />
+          </div>
+          <FishDisplayCard
+            fish={generatedFish}
+            onAdopt={handleAdoptFish}
+            onGenerateAnother={resetState}
+            hasEnoughBalance={hasEnoughBalance(generatedFish.rarity)}
+            isAdopting={isAdopting}
+            isConfirming={isConfirming}
+          />
+        </>
       )}
 
       {/* Price Comparison */}

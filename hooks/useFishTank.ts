@@ -9,6 +9,7 @@ export type Fish = {
   species: string;
   filipinoName: string;
   rarity: string;
+  name: string;
   level: bigint;
   experience: bigint;
   lastFed: bigint;
@@ -21,6 +22,7 @@ type ContractFishData = readonly [
   string,    // species
   string,    // filipinoName
   string,    // rarity
+  string,    // name         // 🆕 Add this line
   bigint,    // level
   bigint,    // experience
   bigint,    // lastFed
@@ -33,6 +35,7 @@ type ContractFishObject = {
   species: string;
   filipinoName: string;
   rarity: string;
+  name: string;
   level: bigint;
   experience: bigint;
   lastFed: bigint;
@@ -146,25 +149,27 @@ export function useFishTank() {
     // Convert the contract data to our Fish type with proper typing
     return (fishData as ContractFishItem[]).map((fishItem) => {
       if (isTupleFormat(fishItem)) {
-        // Tuple format: [id, species, filipinoName, rarity, level, experience, lastFed, isAlive]
-        const [id, species, filipinoName, rarity, level, experience, lastFed, isAlive] = fishItem;
+        // Tuple format: [id, species, filipinoName, rarity, name, level, experience, lastFed, isAlive]
+        const [id, species, filipinoName, rarity, name, level, experience, lastFed, isAlive] = fishItem;
         return {
           id: BigInt(id || 0),
           species: species || "Unknown",
           filipinoName: filipinoName || "Unknown",
           rarity: rarity || "Bronze",
+          name: name || "Isda", // 🆕 Add this line
           level: BigInt(level || 1),
           experience: BigInt(experience || 0),
           lastFed: BigInt(lastFed || Math.floor(Date.now() / 1000)),
           isAlive: isAlive !== undefined ? isAlive : true,
         };
       } else {
-        // Object format: {id, species, filipinoName, ...}
+        // Object format: {id, species, filipinoName, rarity, name, ...}
         return {
           id: BigInt(fishItem.id || 0),
           species: fishItem.species || "Unknown",
           filipinoName: fishItem.filipinoName || "Unknown",
           rarity: fishItem.rarity || "Bronze",
+          name: fishItem.name || "Isda", // 🆕 Add this line
           level: BigInt(fishItem.level || 1),
           experience: BigInt(fishItem.experience || 0),
           lastFed: BigInt(fishItem.lastFed || Math.floor(Date.now() / 1000)),
