@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { Button } from "../../Main/DemoComponents";
 import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../../../../contracts/abi";
 import { type Fish } from "../../../../hooks/useFishTank";
@@ -10,23 +10,16 @@ type FeedingModalProps = {
   fish: Fish;
   onClose: () => void;
   onFeedSuccess: () => void;
+  fishFoodBalance: number;
+  refetchFishFood: () => void;
 };
 
-export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps) {
-  const { address, isConnected } = useAccount();
+export function FeedingModal({ fish, onClose, onFeedSuccess, fishFoodBalance, refetchFishFood }: FeedingModalProps) {
+  const { isConnected } = useAccount();
   const [feedingMethod, setFeedingMethod] = useState<"regular" | "fishfood" | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [xpGained, setXpGained] = useState(0);
 
-  // Read fish food balance
-  const { data: fishFoodBalance, refetch: refetchBalance } = useReadContract({
-    abi: DAGAT_NA_ABI,
-    address: CONTRACT_ADDRESS,
-    functionName: 'getFishFoodBalance',
-    args: address ? [address] : undefined,
-  });
-
-  // Regular feeding (no fish food required)
+  // Regular feeding
   const { 
     writeContract: feedRegular, 
     isPending: isRegularPending,
@@ -35,7 +28,6 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
     mutation: {
       onSuccess: () => {
         console.log("✅ Regular feeding successful!");
-        setXpGained(10);
       },
       onError: (error) => {
         console.error("❌ Regular feeding failed:", error);
@@ -43,7 +35,7 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
     }
   });
 
-  // Fish food feeding (uses earned fish food)
+  // Fish food feeding
   const { 
     writeContract: feedWithFishFood, 
     isPending: isFishFoodPending,
@@ -52,8 +44,7 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
     mutation: {
       onSuccess: () => {
         console.log("✅ Fish food feeding successful!");
-        setXpGained(20);
-        refetchBalance(); // Refresh balance after feeding
+        refetchFishFood(); // Refresh balance after feeding
       },
       onError: (error) => {
         console.error("❌ Fish food feeding failed:", error);
@@ -74,24 +65,18 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
   useEffect(() => {
     if (isRegularConfirmed || isFishFoodConfirmed) {
       setShowSuccess(true);
-      
-      // **FORCE REFRESH IMMEDIATELY** when transaction confirms
-      console.log("🔄 Transaction confirmed, refreshing fish data...");
       onFeedSuccess();
-      
-      // Auto-close after showing success
+      refetchFishFood();
       const timer = setTimeout(() => {
         onClose();
-      }, 3000); // Close after 3 seconds
-      
+      }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [isRegularConfirmed, isFishFoodConfirmed, onFeedSuccess, onClose]);
+  }, [isRegularConfirmed, isFishFoodConfirmed, onFeedSuccess, onClose, refetchFishFood]);
 
-  // Handle feeding actions
+  // Feeding actions
   const handleRegularFeed = async () => {
     if (!isConnected) return;
-
     try {
       await feedRegular({
         abi: DAGAT_NA_ABI,
@@ -106,7 +91,6 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
 
   const handleFishFoodFeed = async () => {
     if (!isConnected) return;
-
     try {
       await feedWithFishFood({
         abi: DAGAT_NA_ABI,
@@ -119,11 +103,10 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
     }
   };
 
-  // Convert BigInt to number safely
-  const fishFoodCount = fishFoodBalance ? Number(fishFoodBalance) : 0;
   const fishLevel = Number(fish.level);
   const fishExp = Number(fish.experience);
-  const expForNextLevel = (fishLevel * 100) - fishExp;
+  const expForNextLevel = ((fishLevel * 10000) - fishExp) / 100;
+  const xpDisplay = (fishExp / 100).toFixed(2);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -132,21 +115,28 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
           {/* Fish Info Header */}
           <div className="mb-4">
             <div className="text-3xl mb-2">🐟</div>
-            <h2 className="text-xl font-bold mb-1">Feed {fish.species}</h2>
+            <h2 className="text-xl font-bold mb-1">Feed {fish.name ? fish.name : fish.species}</h2>
             <p className="text-sm text-gray-600">{fish.filipinoName} • Level {fishLevel}</p>
             <div className="text-xs text-gray-500 mt-1">
-              {expForNextLevel > 0 ? `${expForNextLevel} XP to next level` : "Max level!"}
+              {expForNextLevel > 0 ? `${expForNextLevel.toFixed(2)} XP to next level` : "Max level!"}
+            </div>
+            <div className="text-xs text-blue-700 mt-1">
+              Current XP: {xpDisplay}
             </div>
           </div>
 
-          {/* Show Transaction Success with XP details */}
+          {/* Show Transaction Success */}
           {showSuccess && (isRegularConfirmed || isFishFoodConfirmed) && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <div className="text-green-800 font-medium mb-2">🎉 Feeding Successful!</div>
               <div className="text-sm text-green-700 space-y-1">
-                <div><strong>XP Gained:</strong> +{xpGained}</div>
-                <div><strong>Previous XP:</strong> {fishExp}</div>
-                <div><strong>New XP:</strong> {fishExp + xpGained}</div>
+                <div>
+                  <strong>XP Gained:</strong>{" "}
+                  {isRegularConfirmed
+                    ? "Random (1.00 - 9.99)"
+                    : "+20.00"}
+                </div>
+                <div><strong>Previous XP:</strong> {xpDisplay}</div>
                 {isFishFoodConfirmed && (
                   <div className="text-orange-600 font-medium">🍤 Fish Food Bonus Applied!</div>
                 )}
@@ -171,7 +161,7 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
                   <div className="text-left">
                     <div className="font-medium text-gray-800">🍞 Regular Food</div>
                     <div className="text-sm text-gray-600">Free feeding</div>
-                    <div className="text-xs text-green-600 mt-1">+10 XP</div>
+                    <div className="text-xs text-green-600 mt-1">Random XP (1.00 - 9.99)</div>
                   </div>
                   <div className="text-2xl">🆓</div>
                 </div>
@@ -180,11 +170,11 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
               {/* Fish Food Option */}
               <div 
                 className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                  fishFoodCount > 0 
+                  fishFoodBalance > 0 
                     ? "border-orange-200 hover:border-orange-300 hover:bg-orange-50" 
                     : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-50"
                 }`}
-                onClick={() => fishFoodCount > 0 && setFeedingMethod("fishfood")}
+                onClick={() => fishFoodBalance > 0 && setFeedingMethod("fishfood")}
               >
                 <div className="flex items-center justify-between">
                   <div className="text-left">
@@ -192,21 +182,21 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
                     <div className="text-sm text-gray-600">
                       Earned from Ocean Cleanup
                     </div>
-                    <div className="text-xs text-orange-600 mt-1">+20 XP (Double Bonus!)</div>
+                    <div className="text-xs text-orange-600 mt-1">+20.00 XP (Double Bonus!)</div>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl">🍤</div>
                     <div className="text-xs text-gray-600">
-                      {fishFoodCount} available
+                      {fishFoodBalance} available
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Show fish food balance prominently */}
+              {/* Show fish food balance */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <div className="text-sm text-blue-800">
-                  <strong>Your Fish Food:</strong> {fishFoodCount} 🍤
+                  <strong>Your Fish Food:</strong> {fishFoodBalance} 🍤
                 </div>
                 <div className="text-xs text-blue-600 mt-1">
                   Earn more by playing Ocean Cleanup mini-game!
@@ -224,13 +214,13 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
                 </div>
                 <div className="text-sm text-gray-600 mb-2">
                   {feedingMethod === "regular" 
-                    ? "Feed your fish with regular food (+10 XP)" 
-                    : `Use 1 fish food for bonus XP (+20 XP)`
+                    ? "Feed your fish with regular food (Random XP: 1.00 - 9.99)" 
+                    : `Use 1 fish food for bonus XP (+20.00 XP)`
                   }
                 </div>
                 {feedingMethod === "fishfood" && (
                   <div className="text-xs text-orange-600">
-                    Remaining after feeding: {fishFoodCount - 1} fish food
+                    Remaining after feeding: {fishFoodBalance - 1} fish food
                   </div>
                 )}
               </div>
@@ -270,7 +260,7 @@ export function FeedingModal({ fish, onClose, onFeedSuccess }: FeedingModalProps
             </div>
           )}
 
-          {/* Close button (only show if not in loading/success state) */}
+          {/* Close button */}
           {!isRegularPending && !isFishFoodPending && !feedingMethod && !showSuccess && (
             <div className="mt-4">
               <Button

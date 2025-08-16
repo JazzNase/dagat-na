@@ -75,57 +75,52 @@ contract DagatNa {
         fishes[fishId].name = newName;
         emit FishRenamed(fishId, newName);
     }
+function feedFish(uint256 fishId) external {
+    require(fishToOwner[fishId] == msg.sender, "Not your fish");
+    require(fishes[fishId].isAlive, "Fish is dead");
 
-    function feedFish(uint256 fishId) external {
-        require(fishToOwner[fishId] == msg.sender, "Not your fish");
-        require(fishes[fishId].isAlive, "Fish is dead");
-        
-        Fish storage fish = fishes[fishId];
-        fish.lastFed = block.timestamp;
-        fish.experience += 10;
-        
-        // Level up every 100 XP
-        uint256 newLevel = (fish.experience / 100) + 1;
-        if (newLevel > fish.level) {
-            fish.level = newLevel;
-        }
-        
-        emit FishFed(fishId, fish.experience, fish.level);
+    Fish storage fish = fishes[fishId];
+    fish.lastFed = block.timestamp;
+
+    // Random XP between 100 and 999 (1.00 to 9.99)
+    uint256 rand = uint256(keccak256(abi.encodePacked(block.timestamp, msg.sender, fishId))) % 900 + 100;
+    fish.experience += rand;
+
+    uint256 newLevel = (fish.experience / 10000) + 1; // 10000 = 100.00 XP per level
+    if (newLevel > fish.level) {
+        fish.level = newLevel;
     }
 
-    // Mini-Game Reward System
-    function claimMiniGameReward(uint256 amount) external {
-        require(amount > 0, "Amount must be greater than 0");
-        require(amount <= 10, "Maximum 10 fish food per game");
-        
-        fishFoodBalance[msg.sender] += amount;
-        
-        emit FishFoodEarned(msg.sender, amount);
+    emit FishFed(fishId, fish.experience, fish.level);
+}
+
+function feedFishWithFishFood(uint256 fishId) external {
+    require(fishToOwner[fishId] == msg.sender, "Not your fish");
+    require(fishes[fishId].isAlive, "Fish is dead");
+    require(fishFoodBalance[msg.sender] >= 1, "Not enough fish food");
+
+    fishFoodBalance[msg.sender] -= 1;
+    emit FishFoodUsed(msg.sender, 1);
+
+    Fish storage fish = fishes[fishId];
+    fish.lastFed = block.timestamp;
+    fish.experience += 2000; // 20.00 XP
+
+    uint256 newLevel = (fish.experience / 10000) + 1;
+    if (newLevel > fish.level) {
+        fish.level = newLevel;
     }
 
-    function getFishFoodBalance(address player) external view returns (uint256) {
-        return fishFoodBalance[player];
-    }
+    emit FishFed(fishId, fish.experience, fish.level);
+}
 
-    function feedFishWithFishFood(uint256 fishId) external {
-        require(fishToOwner[fishId] == msg.sender, "Not your fish");
-        require(fishes[fishId].isAlive, "Fish is dead");
-        require(fishFoodBalance[msg.sender] >= 1, "Not enough fish food");
-        
-        fishFoodBalance[msg.sender] -= 1;
-        emit FishFoodUsed(msg.sender, 1);
-        
-        Fish storage fish = fishes[fishId];
-        fish.lastFed = block.timestamp;
-        fish.experience += 20;
-        
-        uint256 newLevel = (fish.experience / 100) + 1;
-        if (newLevel > fish.level) {
-            fish.level = newLevel;
-        }
-        
-        emit FishFed(fishId, fish.experience, fish.level);
-    }
+function claimMiniGameReward(uint256 amount) external {
+    require(amount > 0, "Amount must be greater than zero");
+    require(amount <= 10, "Max 10 fish food per claim");
+    fishFoodBalance[msg.sender] += amount;
+    emit FishFoodEarned(msg.sender, amount);
+}
+
 
     function getFishByOwner(address owner) external view returns (Fish[] memory) {
         uint256[] memory fishIds = ownerToFishes[owner];

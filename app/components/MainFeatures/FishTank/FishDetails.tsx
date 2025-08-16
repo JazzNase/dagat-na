@@ -35,11 +35,11 @@ export function FishDetails({ fish, onFeed, isFeedingPending }: FishDetailsProps
     });
   };
 
-  const getExperienceToNext = () => {
-    const currentXP = Number(fish.experience);
-    const progress = (currentXP % 100) / 100 * 100;
-    return { current: currentXP % 100, needed: 100, progress };
-  };
+  // Show XP as decimal
+  const currentXP = Number(fish.experience) / 100;
+  const xpToNext = 100;
+  const progress = (currentXP % 100) / 100 * 100;
+  const xpCurrentDisplay = (currentXP % 100).toFixed(2);
 
   const getTimeSinceLastFed = () => {
     const now = Date.now() / 1000;
@@ -50,8 +50,6 @@ export function FishDetails({ fish, onFeed, isFeedingPending }: FishDetailsProps
     if (diffHours < 24) return `${Math.floor(diffHours)} hours ago`;
     return `${Math.floor(diffHours / 24)} days ago`;
   };
-
-  const xpInfo = getExperienceToNext();
 
   return (
     <div className="bg-white rounded-xl p-6 border border-gray-200">
@@ -110,13 +108,13 @@ export function FishDetails({ fish, onFeed, isFeedingPending }: FishDetailsProps
         
         <div className="flex justify-between items-center">
           <span className="text-sm font-medium">Experience:</span>
-          <span className="text-sm">{xpInfo.current}/{xpInfo.needed} XP</span>
+          <span className="text-sm">{xpCurrentDisplay}/{xpToNext} XP</span>
         </div>
         
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${xpInfo.progress}%` }}
+            style={{ width: `${progress}%` }}
           ></div>
         </div>
 
@@ -144,7 +142,7 @@ export function FishDetails({ fish, onFeed, isFeedingPending }: FishDetailsProps
           size="md"
           className="w-full"
         >
-          {isFeedingPending ? "🔄 Feeding..." : "🍤 Feed Fish (+10 XP)"}
+          {isFeedingPending ? "🔄 Feeding..." : "🍤 Feed Fish"}
         </Button>
         
         <div className="text-xs text-gray-500 text-center">

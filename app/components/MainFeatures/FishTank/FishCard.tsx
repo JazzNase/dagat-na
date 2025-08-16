@@ -43,6 +43,9 @@ export function FishCard({ fish, onSelect, isSelected }: FishCardProps) {
 
   const health = getHealthStatus();
 
+  // Show XP as decimal
+  const xpDisplay = (Number(fish.experience) / 100).toFixed(2);
+
   return (
     <div 
       className={`${getRarityColor(fish.rarity)} border-2 rounded-xl p-4 cursor-pointer transition-all ${
@@ -71,7 +74,7 @@ export function FishCard({ fish, onSelect, isSelected }: FishCardProps) {
             </div>
             <div>
               <div className="font-medium">XP</div>
-              <div>{Number(fish.experience)}</div>
+              <div>{xpDisplay}</div>
             </div>
           </div>
         </div>

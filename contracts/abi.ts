@@ -491,4 +491,4 @@ export const DAGAT_NA_ABI = [
 ] as const;
 
 // 🎯 UPDATE THIS WITH YOUR NEW CONTRACT ADDRESS
-export const CONTRACT_ADDRESS = "0xffd54ad2c8b4c8a0f46637905c1303c9e9296ff4" as const;
+export const CONTRACT_ADDRESS = "0x4fa6b21b070b2e36c864519e4d01ef0dadf0a423" as const;

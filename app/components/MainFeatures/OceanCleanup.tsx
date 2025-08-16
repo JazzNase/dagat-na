@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { Button } from "../Main/DemoComponents";
 import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../../../contracts/abi";
 
@@ -11,35 +11,42 @@ type TrashItem = {
   y: number;
   type: string;
   points: number;
-  createdAt: number; // For auto-disappearing
-  lifetime: number; // How long it stays (in seconds)
+  createdAt: number;
+  lifetime: number;
 };
 
 const TRASH_TYPES = [
-  { emoji: "🗑️", points: 1, lifetime: 8 },  // Disappears after 8 seconds
-  { emoji: "🥤", points: 1, lifetime: 6 },   // Disappears after 6 seconds
-  { emoji: "🛍️", points: 1, lifetime: 10 }, // Stays longer
-  { emoji: "🍾", points: 1, lifetime: 5 },   // Disappears quickly
-  { emoji: "🥫", points: 1, lifetime: 7 },   // Medium lifetime
+  { emoji: "🗑️", points: 1, lifetime: 8 },
+  { emoji: "🥤", points: 1, lifetime: 6 },
+  { emoji: "🛍️", points: 1, lifetime: 10 },
+  { emoji: "🍾", points: 1, lifetime: 5 },
+  { emoji: "🥫", points: 1, lifetime: 7 },
 ];
 
-export function OceanCleanup({ onClose }: { onClose: () => void }) {
-  const { isConnected } = useAccount();
+export function OceanCleanup({ onClose, refetchFishFood }: { onClose: () => void; refetchFishFood?: () => void }) {
+  const { isConnected, address } = useAccount();
   const [gameState, setGameState] = useState<"waiting" | "playing" | "finished">("waiting");
   const [trashCleaned, setTrashCleaned] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
   const [trash, setTrash] = useState<TrashItem[]>([]);
   const [fishFoodEarned, setFishFoodEarned] = useState(0);
-  
-  // Use refs to prevent timer manipulation
+
   const gameStartTime = useRef<number>(0);
   const trashCleanedRef = useRef<number>(0);
 
+  // Read fish food balance for instant UI update after claim
+  const { data: fishFoodBalance, refetch: refetchBalance } = useReadContract({
+    abi: DAGAT_NA_ABI,
+    address: CONTRACT_ADDRESS,
+    functionName: "getFishFoodBalance",
+    args: address ? [address] : undefined,
+  });
+
   // Contract interaction for claiming rewards
-  const { 
-    writeContract: claimReward, 
+  const {
+    writeContract: claimReward,
     isPending: isClaimingPending,
-    data: claimTxHash 
+    data: claimTxHash,
   } = useWriteContract({
     mutation: {
       onSuccess: () => {
@@ -47,13 +54,21 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
       },
       onError: (error) => {
         console.error("❌ Claim reward failed:", error);
-      }
-    }
+      },
+    },
   });
 
   const { isSuccess: isClaimConfirmed } = useWaitForTransactionReceipt({
     hash: claimTxHash,
   });
+
+  // Refetch fish food balance after claim is confirmed
+  useEffect(() => {
+    if (isClaimConfirmed) {
+      refetchBalance();
+      if (refetchFishFood) refetchFishFood();
+    }
+  }, [isClaimConfirmed, refetchBalance, refetchFishFood]);
 
   // Calculate fish food based on exponential trash collection
   const calculateFishFood = (trashCount: number) => {
@@ -67,17 +82,17 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
   const generateTrash = useCallback(() => {
     const newTrash: TrashItem[] = [];
     const currentTime = Date.now();
-    
+
     for (let i = 0; i < 12; i++) {
       const trashType = TRASH_TYPES[Math.floor(Math.random() * TRASH_TYPES.length)];
       newTrash.push({
-        id: currentTime + i + Math.random(), // Truly unique IDs
+        id: currentTime + i + Math.random(),
         x: Math.random() * 80 + 10,
         y: Math.random() * 70 + 10,
         type: trashType.emoji,
         points: trashType.points,
         createdAt: currentTime,
-        lifetime: trashType.lifetime
+        lifetime: trashType.lifetime,
       });
     }
     setTrash(newTrash);
@@ -94,54 +109,53 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
     generateTrash();
   };
 
-  // **FIXED TIMER** - Runs independently using real time
+  // Timer logic
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    
+
     if (gameState === "playing") {
       timer = setInterval(() => {
         const elapsed = Math.floor((Date.now() - gameStartTime.current) / 1000);
         const remaining = Math.max(0, 30 - elapsed);
-        
+
         setTimeLeft(remaining);
-        
+
         if (remaining === 0) {
           setGameState("finished");
           const earned = calculateFishFood(trashCleanedRef.current);
           setFishFoodEarned(earned);
         }
-      }, 100); // Update every 100ms for smooth countdown
+      }, 100);
     }
-    
+
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [gameState]); // Only depends on gameState
+  }, [gameState]);
 
-  // **AUTO-DISAPPEARING TRASH** - Remove expired trash
+  // Auto-disappearing trash
   useEffect(() => {
     if (gameState !== "playing") return;
 
     const cleanupTimer = setInterval(() => {
       const currentTime = Date.now();
-      setTrash(currentTrash => 
-        currentTrash.filter(item => {
+      setTrash((currentTrash) =>
+        currentTrash.filter((item) => {
           const age = (currentTime - item.createdAt) / 1000;
-          return age < item.lifetime; // Keep if not expired
+          return age < item.lifetime;
         })
       );
-    }, 500); // Check every 500ms
+    }, 500);
 
     return () => clearInterval(cleanupTimer);
   }, [gameState]);
 
-  // **SPAWN NEW TRASH** - Add new trash periodically
+  // Spawn new trash
   useEffect(() => {
     if (gameState !== "playing") return;
 
     const spawnTimer = setInterval(() => {
-      setTrash(currentTrash => {
-        // Only spawn if we have less than 15 trash items
+      setTrash((currentTrash) => {
         if (currentTrash.length < 15) {
           const trashType = TRASH_TYPES[Math.floor(Math.random() * TRASH_TYPES.length)];
           const newTrash: TrashItem = {
@@ -151,13 +165,13 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
             type: trashType.emoji,
             points: trashType.points,
             createdAt: Date.now(),
-            lifetime: trashType.lifetime
+            lifetime: trashType.lifetime,
           };
           return [...currentTrash, newTrash];
         }
         return currentTrash;
       });
-    }, 2000); // Spawn new trash every 2 seconds
+    }, 2000);
 
     return () => clearInterval(spawnTimer);
   }, [gameState]);
@@ -166,35 +180,31 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
   const removeTrash = (id: number) => {
     if (gameState !== "playing") return;
 
-    const trashItem = trash.find(t => t.id === id);
+    const trashItem = trash.find((t) => t.id === id);
     if (trashItem) {
-      // Update counts
       const newCount = trashCleanedRef.current + 1;
       trashCleanedRef.current = newCount;
       setTrashCleaned(newCount);
-      
-      // Remove clicked trash
-      setTrash(currentTrash => currentTrash.filter(t => t.id !== id));
+
+      setTrash((currentTrash) => currentTrash.filter((t) => t.id !== id));
     }
   };
 
-  // Claim on-chain reward with safety check
+  // Claim on-chain reward
   const handleClaimReward = async () => {
     if (!isConnected || fishFoodEarned === 0) return;
 
     const safeAmount = Math.min(fishFoodEarned, 10);
 
     try {
-      console.log("🎁 Claiming reward:", safeAmount, "fish food");
-      
       await claimReward({
         abi: DAGAT_NA_ABI,
         address: CONTRACT_ADDRESS,
-        functionName: 'claimMiniGameReward',
+        functionName: "claimMiniGameReward",
         args: [BigInt(safeAmount)],
       });
     } catch (error) {
-      console.error('❌ Error claiming reward:', error);
+      console.error("❌ Error claiming reward:", error);
     }
   };
 
@@ -209,7 +219,7 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
             <p className="text-gray-600 mb-4">
               Help clean the Philippine waters! Remove trash to earn fish food for your tank.
             </p>
-            
+
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
               <h3 className="font-medium text-blue-800 mb-2">🏆 Game Rules:</h3>
               <ul className="text-sm text-blue-700 space-y-1 text-left">
@@ -250,41 +260,41 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
   if (gameState === "playing") {
     const currentFishFood = calculateFishFood(trashCleaned);
     const nextTarget = trashCleaned < 10 ? 10 : trashCleaned < 20 ? 20 : 40;
-    const progress = trashCleaned < 10 ? (trashCleaned / 10) * 100 : 
-                    trashCleaned < 20 ? ((trashCleaned - 10) / 10) * 100 :
-                    trashCleaned < 40 ? ((trashCleaned - 20) / 20) * 100 : 100;
+    const progress =
+      trashCleaned < 10
+        ? (trashCleaned / 10) * 100
+        : trashCleaned < 20
+        ? ((trashCleaned - 10) / 10) * 100
+        : trashCleaned < 40
+        ? ((trashCleaned - 20) / 20) * 100
+        : 100;
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl p-4 max-w-sm mx-4 w-full">
-          {/* Game Header */}
           <div className="flex justify-between items-center mb-4">
             <div className="text-sm font-medium">Trash: {trashCleaned}</div>
             <div className="text-sm font-medium text-red-600">Time: {timeLeft}s</div>
           </div>
 
-          {/* Ocean Game Area */}
           <div className="relative h-64 bg-gradient-to-b from-blue-200 via-blue-300 to-blue-400 rounded-lg overflow-hidden border-2 border-blue-300">
-            {/* Water waves effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-pulse"></div>
-            
-            {/* Trash Items with lifetime visual indicator */}
-            {trash.map(item => {
+            {trash.map((item) => {
               const currentTime = Date.now();
               const age = (currentTime - item.createdAt) / 1000;
               const lifePercent = Math.max(0, (item.lifetime - age) / item.lifetime);
-              const opacity = Math.max(0.3, lifePercent); // Fade as it gets older
-              
+              const opacity = Math.max(0.3, lifePercent);
+
               return (
                 <div
                   key={item.id}
                   className="absolute cursor-pointer text-xl hover:scale-110 transition-all active:scale-95 z-10"
-                  style={{ 
-                    left: `${item.x}%`, 
+                  style={{
+                    left: `${item.x}%`,
                     top: `${item.y}%`,
-                    transform: 'translate(-50%, -50%)',
+                    transform: "translate(-50%, -50%)",
                     opacity: opacity,
-                    filter: lifePercent < 0.3 ? 'brightness(0.7)' : 'none' // Dim when about to disappear
+                    filter: lifePercent < 0.3 ? "brightness(0.7)" : "none",
                   }}
                   onClick={() => removeTrash(item.id)}
                 >
@@ -293,20 +303,18 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
               );
             })}
 
-            {/* Fish swimming around */}
             <div className="absolute bottom-4 left-4 text-lg animate-bounce">🐟</div>
             <div className="absolute top-8 right-8 text-lg animate-pulse">🐠</div>
             <div className="absolute bottom-8 right-12 text-lg animate-bounce delay-1000">🐡</div>
           </div>
 
-          {/* Progress */}
           <div className="mt-4">
             <div className="flex justify-between text-xs text-gray-600 mb-1">
               <span>Fish Food: {currentFishFood} 🍤</span>
               <span>Next: {nextTarget} trash</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-green-600 h-2 rounded-full transition-all"
                 style={{ width: `${Math.min(progress, 100)}%` }}
               ></div>
@@ -328,8 +336,6 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
           <div className="text-center">
             <div className="text-4xl mb-4">🎉</div>
             <h2 className="text-xl font-bold mb-2">Ocean Cleanup Complete!</h2>
-            
-            {/* Results */}
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <div className="text-lg font-bold text-green-800 mb-2">
                 Trash Cleaned: {trashCleaned} pieces
@@ -343,8 +349,6 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
                 </div>
               )}
             </div>
-
-            {/* Claim Reward or Play Again */}
             <div className="space-y-2">
               {fishFoodEarned > 0 && isConnected && !isClaimConfirmed ? (
                 <Button
@@ -357,7 +361,6 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
                   {isClaimingPending ? "🔄 Claiming..." : `🎁 Claim ${fishFoodEarned} Fish Food`}
                 </Button>
               ) : null}
-
               {isClaimConfirmed && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-2">
                   <div className="text-sm text-blue-700">
@@ -365,7 +368,6 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
                   </div>
                 </div>
               )}
-
               <Button
                 onClick={startGame}
                 variant="primary"
@@ -374,7 +376,6 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
               >
                 🔄 Play Again
               </Button>
-              
               <Button
                 onClick={onClose}
                 variant="outline"
@@ -383,6 +384,10 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
               >
                 Close
               </Button>
+            </div>
+            {/* Show current fish food balance after claim */}
+            <div className="mt-3 text-xs text-blue-700">
+              Your Fish Food: {fishFoodBalance ? Number(fishFoodBalance) : 0} 🍤
             </div>
           </div>
         </div>

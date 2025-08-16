@@ -25,6 +25,7 @@ import { DagatNaHome } from "./components/Main/DagatNaHome";
 import { FishGuide } from "./components/Main/FishGuide";
 import { AdoptFish } from "./components/MainFeatures/AdoptFish/AdoptFish";
 import { FishTank } from "./components/MainFeatures/FishTank/FishTank";
+import { FishFoodDebug } from "./components/MainFeatures/FishFoodDebug";
 
 export default function App() {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
@@ -146,6 +147,7 @@ export default function App() {
         </header>
 
         <main className="flex-1">
+          <FishFoodDebug /> {/* <-- Add this line for debugging */}
           {renderContent()}
         </main>
 

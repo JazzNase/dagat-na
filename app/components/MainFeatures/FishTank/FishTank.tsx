@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import { useFishTank, type Fish } from "../../../../hooks/useFishTank";
-import { CONTRACT_ADDRESS } from "../../../../contracts/abi";
+import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../../../../contracts/abi";
 import { OceanCleanup } from "../OceanCleanup";
 import { FishCard } from "./FishCard";
 import { FishDetails } from "./FishDetails";
@@ -27,54 +27,43 @@ export function FishTank() {
   const [showMiniGame, setShowMiniGame] = useState(false);
   const [showFeedingModal, setShowFeedingModal] = useState(false);
 
-  // **FIX: Auto-update selected fish when fish data changes**
+  // Fish food balance state
+  const { data: fishFoodBalance, refetch: refetchFishFood } = useReadContract({
+    abi: DAGAT_NA_ABI,
+    address: CONTRACT_ADDRESS,
+    functionName: "getFishFoodBalance",
+    args: address ? [address] : undefined,
+  });
+
+  // Auto-update selected fish when fish data changes
   useEffect(() => {
     if (selectedFish && fish.length > 0) {
-      // Find the updated version of the selected fish
       const updatedFish = fish.find(f => f.id === selectedFish.id);
-      if (updatedFish) {
-        console.log("🔄 Updating selected fish with new data:", {
-          id: Number(updatedFish.id),
-          oldXP: Number(selectedFish.experience),
-          newXP: Number(updatedFish.experience)
-        });
-        setSelectedFish(updatedFish);
-      }
+      if (updatedFish) setSelectedFish(updatedFish);
     }
   }, [fish, selectedFish, setSelectedFish]);
 
-  // Handle feeding with modal
+  // Feeding modal handler
   const handleFeedWithModal = (fish: Fish) => {
     setSelectedFish(fish);
     setShowFeedingModal(true);
   };
 
-  // **IMPROVED FEED SUCCESS HANDLER**
+  // Feed success handler
   const handleFeedSuccess = () => {
-    console.log("🔄 Feeding successful, refreshing fish data...");
-    
-    // Multiple refresh attempts to ensure data is updated
     refreshFish();
-    
-    // Refresh again after a short delay to catch blockchain updates
-    setTimeout(() => {
-      console.log("🔄 Secondary refresh...");
-      refreshFish();
-    }, 1000);
-    
-    // Third refresh to be absolutely sure
-    setTimeout(() => {
-      console.log("🔄 Final refresh...");
-      refreshFish();
-    }, 3000);
-    
-    // Close modal after a short delay to see the updates
-    setTimeout(() => {
-      setShowFeedingModal(false);
-    }, 2000);
+    setTimeout(() => refreshFish(), 1000);
+    setTimeout(() => refreshFish(), 3000);
+    setTimeout(() => setShowFeedingModal(false), 2000);
+    refetchFishFood(); // <-- Refresh fish food after feeding
   };
 
-  // Show status component for non-success states
+  // Get current selected fish data
+  const currentSelectedFish = selectedFish ? 
+    fish.find(f => f.id === selectedFish.id) || selectedFish : 
+    null;
+
+  // Status component for non-success states
   if (!isConnected || isLoading || error || totalCountError || fish.length === 0) {
     return (
       <TankStatus
@@ -92,12 +81,6 @@ export function FishTank() {
     );
   }
 
-  // **Get current selected fish data (most up-to-date)**
-  const currentSelectedFish = selectedFish ? 
-    fish.find(f => f.id === selectedFish.id) || selectedFish : 
-    null;
-
-  // Success state - show fish tank
   return (
     <div className="space-y-6 p-4">
       <TankStatus
@@ -131,7 +114,7 @@ export function FishTank() {
         ))}
       </div>
 
-      {/* Fish Details with CURRENT DATA */}
+      {/* Fish Details */}
       {currentSelectedFish && (
         <div className="bg-white rounded-xl p-6 border border-gray-200">
           <FishDetails
@@ -139,12 +122,12 @@ export function FishTank() {
             onFeed={() => handleFeedWithModal(currentSelectedFish)}
             isFeedingPending={isFeedingPending}
           />
-          
-          {/* **DEBUG INFO** - Remove this after testing */}
+          {/* DEBUG INFO */}
           <div className="mt-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
             <div><strong>Fish ID:</strong> {Number(currentSelectedFish.id)}</div>
-            <div><strong>XP:</strong> {Number(currentSelectedFish.experience)}</div>
+            <div><strong>XP:</strong> {(Number(currentSelectedFish.experience) / 100).toFixed(2)}</div>
             <div><strong>Last Updated:</strong> {new Date().toLocaleTimeString()}</div>
+            <div><strong>Fish Food:</strong> {fishFoodBalance ? Number(fishFoodBalance) : 0} 🍤</div>
           </div>
         </div>
       )}
@@ -162,7 +145,13 @@ export function FishTank() {
 
       {/* Modals */}
       {showMiniGame && (
-        <OceanCleanup onClose={() => setShowMiniGame(false)} />
+        <OceanCleanup 
+          onClose={() => {
+            setShowMiniGame(false);
+            refetchFishFood(); // <-- This triggers a refresh for FeedingModal too!
+          }} 
+          refetchFishFood={refetchFishFood}
+        />
       )}
 
       {showFeedingModal && currentSelectedFish && (
@@ -170,6 +159,8 @@ export function FishTank() {
           fish={currentSelectedFish}
           onClose={() => setShowFeedingModal(false)}
           onFeedSuccess={handleFeedSuccess}
+          fishFoodBalance={fishFoodBalance ? Number(fishFoodBalance) : 0} // <-- Pass balance
+          refetchFishFood={refetchFishFood} // <-- Pass refetch to FeedingModal
         />
       )}
     </div>
