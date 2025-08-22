@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { useFishTank, type Fish } from "../../../../hooks/useFishTank";
 import { CONTRACT_ADDRESS } from "../../../../contracts/abi";
-import { OceanCleanup } from "../OceanCleanup";
+import { OceanCleanup } from "../OceanCleanup/OceanCleanup";
 import { FishCard } from "./FishCard";
 import { FishDetails } from "./FishDetails";
 import { TankStatus } from "./TankStatus";
