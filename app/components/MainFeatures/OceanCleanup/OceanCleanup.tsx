@@ -13,7 +13,7 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
   const { isConnected } = useAccount();
   const [gameState, setGameState] = useState<"waiting" | "playing" | "finished">("waiting");
   const [trashCleaned, setTrashCleaned] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(60);
   const [trash, setTrash] = useState<TrashItem[]>([]);
   const [fishFoodEarned, setFishFoodEarned] = useState(0);
 
@@ -46,6 +46,7 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
     return 0;
   };
 
+  // Randomize points and add 3 seconds to lifetime for each trash item
   const generateTrash = useCallback(() => {
     const newTrash: TrashItem[] = [];
     const currentTime = Date.now();
@@ -56,9 +57,9 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
         x: Math.random() * 80 + 10,
         y: Math.random() * 70 + 10,
         type: trashType.emoji,
-        points: trashType.points,
+        points: Math.floor(Math.random() * 3) + 1, // random 1-3 integer
         createdAt: currentTime,
-        lifetime: trashType.lifetime
+        lifetime: trashType.lifetime + 3 // add at least 3 seconds
       });
     }
     setTrash(newTrash);
@@ -67,7 +68,7 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
   const startGame = () => {
     setGameState("playing");
     setTrashCleaned(0);
-    setTimeLeft(30);
+    setTimeLeft(60);
     setFishFoodEarned(0);
     trashCleanedRef.current = 0;
     gameStartTime.current = Date.now();
@@ -79,7 +80,7 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
     if (gameState === "playing") {
       timer = setInterval(() => {
         const elapsed = Math.floor((Date.now() - gameStartTime.current) / 1000);
-        const remaining = Math.max(0, 30 - elapsed);
+        const remaining = Math.max(0, 60 - elapsed);
         setTimeLeft(remaining);
         if (remaining === 0) {
           setGameState("finished");
@@ -118,9 +119,9 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
             x: Math.random() * 80 + 10,
             y: Math.random() * 70 + 10,
             type: trashType.emoji,
-            points: trashType.points,
+            points: Math.floor(Math.random() * 3) + 1, // random 1-3 integer
             createdAt: Date.now(),
-            lifetime: trashType.lifetime
+            lifetime: trashType.lifetime + 3 // add at least 3 seconds
           };
           return [...currentTrash, newTrash];
         }
