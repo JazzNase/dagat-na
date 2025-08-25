@@ -6,6 +6,8 @@ import { useWriteContract } from "wagmi";
 import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../../../../contracts/abi";
 import { type Fish } from "../../../../hooks/useFishTank";
 
+const FEED_COOLDOWN_SECONDS = 300; // 5 minutes
+
 interface FishDetailsProps {
   fish: Fish;
   onFeed: () => void;
@@ -44,12 +46,20 @@ export function FishDetails({ fish, onFeed, isFeedingPending }: FishDetailsProps
   const getTimeSinceLastFed = () => {
     const now = Date.now() / 1000;
     const lastFedSeconds = Number(fish.lastFed);
-    const diffHours = (now - lastFedSeconds) / 3600;
-    
-    if (diffHours < 1) return `${Math.floor(diffHours * 60)} minutes ago`;
-    if (diffHours < 24) return `${Math.floor(diffHours)} hours ago`;
-    return `${Math.floor(diffHours / 24)} days ago`;
+    const diffSeconds = now - lastFedSeconds;
+    const diffMinutes = Math.floor(diffSeconds / 60);
+
+    if (diffMinutes < 1) return `${Math.floor(diffSeconds)} seconds ago`;
+    if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+    if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)} hours ago`;
+    return `${Math.floor(diffMinutes / 1440)} days ago`;
   };
+
+  // --- FEED COOLDOWN LOGIC ---
+  const nowSeconds = Date.now() / 1000;
+  const lastFedSeconds = Number(fish.lastFed);
+  const secondsSinceFed = nowSeconds - lastFedSeconds;
+  const feedCooldownLeft = Math.max(0, FEED_COOLDOWN_SECONDS - secondsSinceFed);
 
   const xpInfo = getExperienceToNext();
 
@@ -139,17 +149,26 @@ export function FishDetails({ fish, onFeed, isFeedingPending }: FishDetailsProps
       <div className="space-y-2">
         <Button
           onClick={onFeed}
-          disabled={isFeedingPending || !fish.isAlive}
+          disabled={isFeedingPending || !fish.isAlive || feedCooldownLeft > 0}
           variant="primary"
           size="md"
           className="w-full"
         >
-          {isFeedingPending ? "🔄 Feeding..." : "🍤 Feed Fish (+10 XP)"}
+          {feedCooldownLeft > 0
+            ? `⏳ Wait ${Math.ceil(feedCooldownLeft)}s to feed again`
+            : isFeedingPending
+              ? "🔄 Feeding..."
+              : "🍤 Feed Fish (+10 XP)"}
         </Button>
         
         <div className="text-xs text-gray-500 text-center">
           Feeding gives experience and keeps your fish healthy!
         </div>
+        {feedCooldownLeft > 0 && (
+          <div className="text-xs text-red-500 text-center mt-2">
+            You must wait {Math.ceil(feedCooldownLeft)} seconds before feeding this fish again.
+          </div>
+        )}
       </div>
     </div>
   );

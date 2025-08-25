@@ -11,6 +11,7 @@ interface FishDisplayCardProps {
   hasEnoughBalance: boolean;
   isAdopting: boolean;
   isConfirming: boolean;
+  cooldownLeft?: number;
 }
 
 export function FishDisplayCard({ 
@@ -19,7 +20,8 @@ export function FishDisplayCard({
   onGenerateAnother, 
   hasEnoughBalance, 
   isAdopting, 
-  isConfirming 
+  isConfirming,
+  cooldownLeft = 0
 }: FishDisplayCardProps) {
   const getAdoptionFee = (rarity: string) => {
     const fee = ADOPTION_FEES[rarity as keyof typeof ADOPTION_FEES];
@@ -75,9 +77,17 @@ export function FishDisplayCard({
           onClick={onGenerateAnother}
           variant="outline"
           size="sm"
+          disabled={cooldownLeft > 0}
         >
-          🎣 Cast Net Again
+          {cooldownLeft > 0
+            ? `⏳ Wait ${cooldownLeft}s to cast again`
+            : "🎣 Cast Net Again"}
         </Button>
+        {cooldownLeft > 0 && (
+          <div className="mt-2 text-xs text-red-500">
+            You must wait {cooldownLeft} seconds before casting your net again.
+          </div>
+        )}
       </div>
     </div>
   );

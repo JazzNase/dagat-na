@@ -9,6 +9,7 @@ type Props = {
   onClaim: () => void;
   onPlayAgain: () => void;
   onClose: () => void;
+  gameCooldownLeft?: number; // <-- Add this prop
 };
 
 export function GameFinishedModal({
@@ -20,6 +21,7 @@ export function GameFinishedModal({
   onClaim,
   onPlayAgain,
   onClose,
+  gameCooldownLeft = 0 // <-- Default to 0
 }: Props) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -64,9 +66,17 @@ export function GameFinishedModal({
               variant="primary"
               size="md"
               className="w-full"
+              disabled={gameCooldownLeft > 0}
             >
-              🔄 Play Again
+              {gameCooldownLeft > 0
+                ? `⏳ Wait ${gameCooldownLeft}s to play again`
+                : "🔄 Play Again"}
             </Button>
+            {gameCooldownLeft > 0 && (
+              <div className="text-xs text-red-500 mt-2">
+                You must wait {gameCooldownLeft} seconds before playing again.
+              </div>
+            )}
             <Button
               onClick={onClose}
               variant="outline"
