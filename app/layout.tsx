@@ -12,20 +12,35 @@ export const viewport: Viewport = {
 export async function generateMetadata(): Promise<Metadata> {
   const URL = process.env.NEXT_PUBLIC_URL;
   return {
-    title: "🐟 Dagat na - Filipino Fish Care Game",
+    title: "Dagat na - Filipino Fish Care Game", // Use text only for title
     description: "Adopt, raise, and care for Filipino fish species in this Tamagotchi-style mini app built on Base",
+    icons: {
+      icon: "/fish/Dalagang bukid.png", // Use your fish image as favicon/ico
+      shortcut: "/fish/Dalagang bukid.png",
+      apple: "/fish/Dalagang bukid.png",
+    },
+    openGraph: {
+      images: [
+        {
+          url: "/fish/Dalagang bukid.png", // Social preview image
+          width: 400,
+          height: 400,
+          alt: "Dalagang bukid",
+        },
+      ],
+    },
     other: {
       "fc:frame": JSON.stringify({
         version: "next",
-        imageUrl: process.env.NEXT_PUBLIC_APP_HERO_IMAGE,
+        imageUrl: "/fish/Dalagang bukid.png", // Hero image for Farcaster frame
         button: {
-          title: `🐟 Adopt Your First Filipino Fish`,
+          title: `Adopt Your First Filipino Fish`,
           action: {
             type: "launch_frame",
             name: "Dagat na",
             url: URL,
-            splashImageUrl: process.env.NEXT_PUBLIC_SPLASH_IMAGE,
-            splashBackgroundColor: "#0066FF", // Ocean blue
+            splashImageUrl: "/fish/Dalagang bukid.png",
+            splashBackgroundColor: "#0066FF",
           },
         },
       }),

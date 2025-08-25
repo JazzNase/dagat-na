@@ -1,6 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import { type Fish } from "../../../../hooks/useFishTank";
+
+const FISH_IMAGES: Record<string, string> = {
+  "Bangus": "Bangus.png",
+  "Dilis": "Dilis.png",
+  "Lapu-lapu": "Lapu-lapu.png",
+  "Maya-maya": "Maya-maya.png",
+  "Tambakol": "Tambakol.png",
+  "Tilapia": "Tilapia.png",
+  // Add more mappings as needed
+};
 
 interface FishCardProps {
   fish: Fish;
@@ -42,6 +53,7 @@ export function FishCard({ fish, onSelect, isSelected }: FishCardProps) {
   };
 
   const health = getHealthStatus();
+  const fishImage = FISH_IMAGES[fish.species] || "Bangus.png";
 
   return (
     <div 
@@ -51,9 +63,16 @@ export function FishCard({ fish, onSelect, isSelected }: FishCardProps) {
       onClick={onSelect}
     >
       <div className="text-center">
-        <div className="text-2xl mb-1">
-          {getRarityEmoji(fish.rarity)} 🐟
+        <div className="mb-1 flex justify-center">
+          <Image
+            src={`/fish/${fishImage}`}
+            alt={fish.species}
+            width={40}
+            height={40}
+            className="mx-auto object-contain"
+          />
         </div>
+        <div className="text-xs mb-1">{getRarityEmoji(fish.rarity)}</div>
         <h3 className="font-bold text-base text-blue-900 mb-1">
           {fish.name ? fish.name : fish.species}
         </h3>

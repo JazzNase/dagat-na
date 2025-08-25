@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useAccount, useReadContract } from 'wagmi'
 import { Button } from './DemoComponents'
 import { CONTRACT_ADDRESS, DAGAT_NA_ABI } from '../../../contracts/abi'
@@ -26,7 +27,15 @@ export function DagatNaHome({ setActiveTab }: DagatNaHomeProps) {
     <div className="space-y-6">
       {/* Welcome Header */}
       <div className="text-center space-y-3">
-        <div className="text-4xl mb-2">🐟</div>
+        <div className="mb-2 flex justify-center">
+          <Image
+            src="/fish/Dalagang bukid.png"
+            alt="Dalagang bukid"
+            width={48}
+            height={48}
+            className="mx-auto object-contain"
+          />
+        </div>
         <h1 className="text-2xl font-bold text-blue-600">
           Welcome to Dagat na!
         </h1>
@@ -151,15 +160,14 @@ export function DagatNaHome({ setActiveTab }: DagatNaHomeProps) {
       {/* Fish Species Preview */}
       <div className="space-y-2">
         <h3 className="font-bold text-sm text-center">🐟 Featured Fish Species</h3>
-<div className="grid grid-cols-3 gap-2 text-xs">
-  <FishPreview name="Bangus" emoji="🐟" rarity="National" />
-  <FishPreview name="Tilapia" emoji="🐠" rarity="Common" />
-  <FishPreview name="Lapu-lapu" emoji="🐡" rarity="Rare" />
-  <FishPreview name="Maya-maya" emoji="🐟" rarity="Popular" />
-  <FishPreview name="Tambakol" emoji="🐋" rarity="Ocean" />
-  <FishPreview name="Dilis" emoji="🐟" rarity="Tiny" />
-</div>
-
+        <div className="grid grid-cols-3 gap-2 text-xs">
+          <FishPreview name="Bangus" image="Bangus.png" rarity="National" />
+          <FishPreview name="Tilapia" image="Tilapia.png" rarity="Common" />
+          <FishPreview name="Lapu-lapu" image="Lapu-lapu.png" rarity="Rare" />
+          <FishPreview name="Maya-maya" image="Maya-maya.png" rarity="Popular" />
+          <FishPreview name="Tambakol" image="Tambakol.png" rarity="Ocean" />
+          <FishPreview name="Dilis" image="Dilis.png" rarity="Tiny" />
+        </div>
       </div>
     </div>
   )
@@ -183,14 +191,20 @@ function FeatureCard({ emoji, title, description }: {
   )
 }
 
-function FishPreview({ name, emoji, rarity }: {
+function FishPreview({ name, image, rarity }: {
   name: string
-  emoji: string
+  image: string
   rarity: string
 }) {
   return (
     <div className="bg-white border rounded p-2 text-center">
-      <div className="text-lg mb-1">{emoji}</div>
+      <Image
+        src={`/fish/${image}`}
+        alt={name}
+        width={32}
+        height={32}
+        className="mx-auto mb-1 object-contain"
+      />
       <div className="font-medium text-xs">{name}</div>
       <div className="text-xs text-gray-500">{rarity}</div>
     </div>

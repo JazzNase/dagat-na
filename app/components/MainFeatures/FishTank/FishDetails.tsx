@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { Button } from "../../Main/DemoComponents";
 import { useWriteContract } from "wagmi";
@@ -7,6 +8,16 @@ import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../../../../contracts/abi";
 import { type Fish } from "../../../../hooks/useFishTank";
 
 const FEED_COOLDOWN_SECONDS = 300; // 5 minutes
+
+const FISH_IMAGES: Record<string, string> = {
+  "Bangus": "Bangus.png",
+  "Dilis": "Dilis.png",
+  "Lapu-lapu": "Lapu-lapu.png",
+  "Maya-maya": "Maya-maya.png",
+  "Tambakol": "Tambakol.png",
+  "Tilapia": "Tilapia.png",
+  // Add more mappings as needed
+};
 
 interface FishDetailsProps {
   fish: Fish;
@@ -62,6 +73,7 @@ export function FishDetails({ fish, onFeed, isFeedingPending }: FishDetailsProps
   const feedCooldownLeft = Math.max(0, FEED_COOLDOWN_SECONDS - secondsSinceFed);
 
   const xpInfo = getExperienceToNext();
+  const fishImage = FISH_IMAGES[fish.species] || "Bangus.png";
 
   return (
     <div className="bg-white rounded-xl p-6 border border-gray-200">
@@ -70,7 +82,15 @@ export function FishDetails({ fish, onFeed, isFeedingPending }: FishDetailsProps
           {fish.name || fish.species}
         </h2>
         <p className="text-gray-600">{fish.filipinoName}</p>
-        <div className="text-3xl my-3">🐟</div>
+        <div className="my-3 flex justify-center">
+          <Image
+            src={`/fish/${fishImage}`}
+            alt={fish.species}
+            width={64}
+            height={64}
+            className="mx-auto object-contain"
+          />
+        </div>
         {/* 🆕 Rename UI */}
         <div className="mt-2">
           {isRenaming ? (

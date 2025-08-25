@@ -1,8 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import { Button } from "../../Main/DemoComponents";
 import { ADOPTION_FEES, type GeneratedFish } from "./AdoptFishConfig";
 import { FishRarityUtils } from "./FishRarityUtils";
+
+const FISH_IMAGES: Record<string, string> = {
+  "Bangus": "Bangus.png",
+  "Dilis": "Dilis.png",
+  "Lapu-lapu": "Lapu-lapu.png",
+  "Maya-maya": "Maya-maya.png",
+  "Tambakol": "Tambakol.png",
+  "Tilapia": "Tilapia.png",
+  // Add more mappings as needed
+};
 
 interface FishDisplayCardProps {
   fish: GeneratedFish;
@@ -28,12 +39,20 @@ export function FishDisplayCard({
     return fee ? `${fee} ETH` : "Unknown";
   };
 
+  const fishImage = FISH_IMAGES[fish.species] || "Bangus.png"; // fallback image
+
   return (
     <div className="space-y-4">
       {/* Fish Card */}
       <div className={`${FishRarityUtils.getRarityColor(fish.rarity)} border-2 rounded-xl p-6 text-center shadow-lg`}>
-        <div className="text-4xl mb-2">
-          {FishRarityUtils.getRarityEmoji(fish.rarity)} 🐟
+        <div className="mb-2 flex justify-center">
+          <Image
+            src={`/fish/${fishImage}`}
+            alt={fish.species}
+            width={64}
+            height={64}
+            className="mx-auto object-contain"
+          />
         </div>
         <h3 className="text-xl font-bold text-gray-800 mb-1">
           {fish.rarity} {fish.species}
