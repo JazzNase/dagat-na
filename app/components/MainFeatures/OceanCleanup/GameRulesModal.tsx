@@ -1,6 +1,14 @@
 import { Button } from "../../Main/DemoComponents";
 
-export function GameRulesModal({ onStart, onClose }: { onStart: () => void; onClose: () => void }) {
+export function GameRulesModal({
+  onStart,
+  onClose,
+  gameCooldownLeft = 0
+}: {
+  onStart: () => void;
+  onClose: () => void;
+  gameCooldownLeft?: number;
+}) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 max-w-sm mx-4">
@@ -16,15 +24,28 @@ export function GameRulesModal({ onStart, onClose }: { onStart: () => void; onCl
               <li>• Clean 10 trash = 1 fish food 🍤</li>
               <li>• Clean 20 trash = 2 fish food 🍤🍤</li>
               <li>• Clean 40 trash = 3 fish food 🍤🍤🍤</li>
-              <li>• ⏰ Exactly 30 seconds (no pausing!)</li>
+              <li>• ⏰ Exactly 60 seconds (no pausing!)</li>
               <li>• 🗑️ Trash auto-disappears after time</li>
               <li>• 🔄 New trash spawns continuously</li>
             </ul>
           </div>
           <div className="space-y-2">
-            <Button onClick={onStart} variant="primary" size="md" className="w-full">
-              🎮 Start Cleanup!
+            <Button
+              onClick={onStart}
+              variant="primary"
+              size="md"
+              className="w-full"
+              disabled={gameCooldownLeft > 0}
+            >
+              {gameCooldownLeft > 0
+                ? `⏳ Wait ${gameCooldownLeft}s to play again`
+                : "🎮 Start Cleanup!"}
             </Button>
+            {gameCooldownLeft > 0 && (
+              <div className="text-xs text-red-500 mt-2">
+                You must wait {gameCooldownLeft} seconds before playing again.
+              </div>
+            )}
             <Button onClick={onClose} variant="outline" size="sm" className="w-full">
               Cancel
             </Button>

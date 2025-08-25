@@ -9,6 +9,9 @@ import { GameRulesModal } from "./GameRulesModal";
 import { OceanGameArea } from "./OceanGameArea";
 import { GameFinishedModal } from "./GameFinishedModal";
 
+const GAME_COOLDOWN_SECONDS = 300; // 5 minutes
+const GAME_LAST_PLAY_KEY = "dagatna_last_ocean_cleanup_time";
+
 export function OceanCleanup({ onClose }: { onClose: () => void }) {
   const { isConnected } = useAccount();
   const [gameState, setGameState] = useState<"waiting" | "playing" | "finished">("waiting");
@@ -17,13 +20,36 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
   const [trash, setTrash] = useState<TrashItem[]>([]);
   const [fishFoodEarned, setFishFoodEarned] = useState(0);
 
+  const [gameCooldownLeft, setGameCooldownLeft] = useState<number>(0);
+
   const gameStartTime = useRef<number>(0);
   const trashCleanedRef = useRef<number>(0);
 
-  const { 
-    writeContract: claimReward, 
+  // Track last play time for cooldown
+  useEffect(() => {
+    const stored = localStorage.getItem(GAME_LAST_PLAY_KEY);
+    if (stored) {
+      const lastPlay = Number(stored);
+      const elapsed = Math.floor((Date.now() - lastPlay) / 1000);
+      const left = Math.max(0, GAME_COOLDOWN_SECONDS - elapsed);
+      setGameCooldownLeft(left);
+      if (left > 0) {
+        // Update cooldown every second
+        const interval = setInterval(() => {
+          const elapsedNow = Math.floor((Date.now() - lastPlay) / 1000);
+          const leftNow = Math.max(0, GAME_COOLDOWN_SECONDS - elapsedNow);
+          setGameCooldownLeft(leftNow);
+          if (leftNow <= 0) clearInterval(interval);
+        }, 1000);
+        return () => clearInterval(interval);
+      }
+    }
+  }, [gameState]);
+
+  const {
+    writeContract: claimReward,
     isPending: isClaimingPending,
-    data: claimTxHash 
+    data: claimTxHash
   } = useWriteContract({
     mutation: {
       onSuccess: () => {
@@ -66,6 +92,7 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
   }, []);
 
   const startGame = () => {
+    if (gameCooldownLeft > 0) return; // Prevent starting if cooldown active
     setGameState("playing");
     setTrashCleaned(0);
     setTimeLeft(60);
@@ -86,6 +113,9 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
           setGameState("finished");
           const earned = calculateFishFood(trashCleanedRef.current);
           setFishFoodEarned(earned);
+          // Save last play time for cooldown
+          localStorage.setItem(GAME_LAST_PLAY_KEY, String(Date.now()));
+          setGameCooldownLeft(GAME_COOLDOWN_SECONDS);
         }
       }, 100);
     }
@@ -98,7 +128,7 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
     if (gameState !== "playing") return;
     const cleanupTimer = setInterval(() => {
       const currentTime = Date.now();
-      setTrash(currentTrash => 
+      setTrash(currentTrash =>
         currentTrash.filter(item => {
           const age = (currentTime - item.createdAt) / 1000;
           return age < item.lifetime;
@@ -159,7 +189,11 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
 
   if (gameState === "waiting") {
     return (
-      <GameRulesModal onStart={startGame} onClose={onClose} />
+      <GameRulesModal
+        onStart={startGame}
+        onClose={onClose}
+        gameCooldownLeft={gameCooldownLeft}
+      />
     );
   }
 
@@ -186,6 +220,7 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
         onClaim={handleClaimReward}
         onPlayAgain={startGame}
         onClose={onClose}
+        gameCooldownLeft={gameCooldownLeft} // <-- Pass cooldown here!
       />
     );
   }
