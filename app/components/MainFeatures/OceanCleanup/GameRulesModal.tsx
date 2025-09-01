@@ -58,7 +58,7 @@ export function GameRulesModal({
                 size="sm"
                 className="w-full"
               >
-                🏆 Leaderboard
+                🍤 Your Overall Fish Food
               </Button>
             )}
           </div>

@@ -9,7 +9,7 @@ import { GameRulesModal } from "./GameRulesModal";
 import { OceanGameArea } from "./OceanGameArea";
 import { GameFinishedModal } from "./GameFinishedModal";
 
-// Leaderboard Modal for Ocean Cleanup (shows global stats + your lifetime fish food earned)
+// Leaderboard Modal for Ocean Cleanup (shows only your lifetime fish food earned)
 function LeaderboardModal({ onClose }: { onClose: () => void }) {
   const { address } = useAccount();
   const { data: totalFishFoodEarned, isLoading: isTotalFoodLoading } = useReadContract({
@@ -22,11 +22,26 @@ function LeaderboardModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 max-w-md mx-4 w-full">
-        <h2 className="text-xl font-bold mb-4 text-center">🍤 Fish Food Collected</h2>
+        <h2 className="text-xl font-bold mb-4 text-center">🍤 Your Fish Food Collected</h2>
         <div className="text-center text-lg font-semibold mb-6">
           {isTotalFoodLoading
             ? "Loading..."
             : `${totalFishFoodEarned?.toString() ?? "0"} Fish Food Collected`}
+        </div>
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-3 text-center mb-4">
+          <div className="flex items-center justify-center space-x-2 mb-1">
+            <span className="text-yellow-600">📊</span>
+            <span className="text-sm font-semibold text-yellow-800">Leaderboard Notice</span>
+            <span className="text-yellow-600">📊</span>
+          </div>
+          <p className="text-xs text-yellow-700 leading-relaxed">
+            <strong>Why can&apos;t you see other players&apos; scores?</strong><br />
+            For privacy and security, smart contracts on Base and Ethereum do <strong>not</strong> allow listing all wallet addresses or scores on-chain. You can only see your own fish food collected.<br />
+            <span className="font-semibold text-orange-800">A global leaderboard may be added in a future deployment using decentralized indexing (like The Graph)!</span>
+          </p>
+          <div className="mt-2 text-xs text-yellow-600">
+            This mini-app is submitted for the <a href="https://basedgigs.com/listing/mini-app-challenge" target="_blank" rel="noopener noreferrer" className="underline">Mini App Challenge</a>.<br />
+          </div>
         </div>
         <button
           className="mt-2 w-full bg-blue-600 text-white py-2 rounded"
@@ -38,7 +53,6 @@ function LeaderboardModal({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
-
 const GAME_COOLDOWN_SECONDS = 300; // 5 minutes
 const GAME_LAST_PLAY_KEY = "dagatna_last_ocean_cleanup_time";
 
@@ -221,6 +235,23 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
   if (gameState === "waiting") {
     return (
       <>
+        {/* 🟡 Leaderboard Explanation Box */}
+        <div className="mb-3 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-3 text-center">
+          <div className="flex items-center justify-center space-x-2 mb-1">
+            <span className="text-yellow-600">📊</span>
+            <span className="text-sm font-semibold text-yellow-800">Leaderboard Notice</span>
+            <span className="text-yellow-600">📊</span>
+          </div>
+          <p className="text-xs text-yellow-700 leading-relaxed">
+            <strong>Why can&apos;t you see other players&apos; scores?</strong><br />
+            For privacy and security, smart contracts on Base and Ethereum do <strong>not</strong> allow listing all wallet addresses or scores on-chain. You can only see your own fish food collected.<br />
+            <span className="font-semibold text-orange-800">A global leaderboard may be added in a future deployment using decentralized indexing (like The Graph)!</span>
+          </p>
+          <div className="mt-2 text-xs text-yellow-600">
+            This mini-app is submitted for the <a href="https://basedgigs.com/listing/mini-app-challenge" target="_blank" rel="noopener noreferrer" className="underline">Mini App Challenge</a>.<br />
+            <span className="font-semibold">Phase 2: On-Chain Live!</span>
+          </div>
+        </div>
         <GameRulesModal
           onStart={startGame}
           onClose={onClose}
