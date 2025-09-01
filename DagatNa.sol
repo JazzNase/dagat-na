@@ -21,6 +21,9 @@ contract DagatNa {
     
     // Fish Food System for Mini-Game Rewards
     mapping(address => uint256) public fishFoodBalance;
+
+    // 🆕 Lifetime fish food earned for leaderboard
+    mapping(address => uint256) public totalFishFoodEarned;
     
     uint256 public adoptionFee = 0.00001 ether; // Very small fee for Base Sepolia
     
@@ -99,12 +102,18 @@ contract DagatNa {
         require(amount <= 10, "Maximum 10 fish food per game");
         
         fishFoodBalance[msg.sender] += amount;
+        totalFishFoodEarned[msg.sender] += amount; // 🆕 Track lifetime earned
         
         emit FishFoodEarned(msg.sender, amount);
     }
 
     function getFishFoodBalance(address player) external view returns (uint256) {
         return fishFoodBalance[player];
+    }
+
+    // 🆕 Get lifetime fish food earned for leaderboard
+    function getTotalFishFoodEarned(address player) external view returns (uint256) {
+        return totalFishFoodEarned[player];
     }
 
     function feedFishWithFishFood(uint256 fishId) external {
