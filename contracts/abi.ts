@@ -487,8 +487,19 @@ export const DAGAT_NA_ABI = [
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-  }
+  },
+  {
+  "inputs": [
+    { "internalType": "address", "name": "player", "type": "address" }
+  ],
+  "name": "getTotalFishFoodEarned",
+  "outputs": [
+    { "internalType": "uint256", "name": "", "type": "uint256" }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+}
 ] as const;
 
 // 🎯 UPDATE THIS WITH YOUR NEW CONTRACT ADDRESS
-export const CONTRACT_ADDRESS = "0xffd54ad2c8b4c8a0f46637905c1303c9e9296ff4" as const;
+export const CONTRACT_ADDRESS = "0xabe511143c6719ab9b4049577327f3001b07cae5" as const;

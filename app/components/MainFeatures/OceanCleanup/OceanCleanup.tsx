@@ -1,13 +1,43 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { DAGAT_NA_ABI, CONTRACT_ADDRESS } from "../../../../contracts/abi";
 import { TrashItem } from "./types";
 import { TRASH_TYPES } from "./trashTypes";
 import { GameRulesModal } from "./GameRulesModal";
 import { OceanGameArea } from "./OceanGameArea";
 import { GameFinishedModal } from "./GameFinishedModal";
+
+// Leaderboard Modal for Ocean Cleanup (shows global stats + your lifetime fish food earned)
+function LeaderboardModal({ onClose }: { onClose: () => void }) {
+  const { address } = useAccount();
+  const { data: totalFishFoodEarned, isLoading: isTotalFoodLoading } = useReadContract({
+    abi: DAGAT_NA_ABI,
+    address: CONTRACT_ADDRESS,
+    functionName: "getTotalFishFoodEarned",
+    args: address ? [address] : undefined,
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-md mx-4 w-full">
+        <h2 className="text-xl font-bold mb-4 text-center">🍤 Fish Food Collected</h2>
+        <div className="text-center text-lg font-semibold mb-6">
+          {isTotalFoodLoading
+            ? "Loading..."
+            : `${totalFishFoodEarned?.toString() ?? "0"} Fish Food Collected`}
+        </div>
+        <button
+          className="mt-2 w-full bg-blue-600 text-white py-2 rounded"
+          onClick={onClose}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const GAME_COOLDOWN_SECONDS = 300; // 5 minutes
 const GAME_LAST_PLAY_KEY = "dagatna_last_ocean_cleanup_time";
@@ -21,6 +51,7 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
   const [fishFoodEarned, setFishFoodEarned] = useState(0);
 
   const [gameCooldownLeft, setGameCooldownLeft] = useState<number>(0);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   const gameStartTime = useRef<number>(0);
   const trashCleanedRef = useRef<number>(0);
@@ -189,11 +220,17 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
 
   if (gameState === "waiting") {
     return (
-      <GameRulesModal
-        onStart={startGame}
-        onClose={onClose}
-        gameCooldownLeft={gameCooldownLeft}
-      />
+      <>
+        <GameRulesModal
+          onStart={startGame}
+          onClose={onClose}
+          gameCooldownLeft={gameCooldownLeft}
+          onShowLeaderboard={() => setShowLeaderboard(true)}
+        />
+        {showLeaderboard && (
+          <LeaderboardModal onClose={() => setShowLeaderboard(false)} />
+        )}
+      </>
     );
   }
 
@@ -220,7 +257,7 @@ export function OceanCleanup({ onClose }: { onClose: () => void }) {
         onClaim={handleClaimReward}
         onPlayAgain={startGame}
         onClose={onClose}
-        gameCooldownLeft={gameCooldownLeft} // <-- Pass cooldown here!
+        gameCooldownLeft={gameCooldownLeft}
       />
     );
   }

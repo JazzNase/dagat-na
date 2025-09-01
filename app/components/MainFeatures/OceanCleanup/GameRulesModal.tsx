@@ -3,11 +3,13 @@ import { Button } from "../../Main/DemoComponents";
 export function GameRulesModal({
   onStart,
   onClose,
-  gameCooldownLeft = 0
+  gameCooldownLeft = 0,
+  onShowLeaderboard, // <-- Add this prop
 }: {
   onStart: () => void;
   onClose: () => void;
   gameCooldownLeft?: number;
+  onShowLeaderboard?: () => void; // <-- Add this prop type
 }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -49,6 +51,16 @@ export function GameRulesModal({
             <Button onClick={onClose} variant="outline" size="sm" className="w-full">
               Cancel
             </Button>
+            {onShowLeaderboard && (
+              <Button
+                onClick={onShowLeaderboard}
+                variant="secondary"
+                size="sm"
+                className="w-full"
+              >
+                🏆 Leaderboard
+              </Button>
+            )}
           </div>
         </div>
       </div>
